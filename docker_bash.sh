@@ -7,7 +7,7 @@ fi
 case $1 in
     "run")
         # Run the docker container
-        docker run -v ./:/src/ --rm --gpus devices=$CUDA_VISIBLE_DEVICES -d -it -p 37332:37332  --name test-llamaindex-container test-llamaindex
+        docker run -v ./:/src/ --rm --gpus device=$CUDA_VISIBLE_DEVICES -d -it -p 37332:37332  --name test-llamaindex-container test-llamaindex
         ;;
     "exec")
         # Execute the models inside the docker container
