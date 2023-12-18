@@ -41,6 +41,6 @@ RUN pip3 install --upgrade stqdm==0.0.4
 RUN pip3 install --upgrade datasets==2.6.1
 RUN pip3 install --upgrade wandb==0.13.5 
 
-RUN pip install https://download.pytorch.org/whl/cu113/torch-1.12.1%2Bcu113-cp310-cp310-linux_x86_64.whl#sha256=be682ef94e37cd3f0768b8ce6106705410189df2c365d65d7bc1bebb302d84cd
+RUN pip3 install https://download.pytorch.org/whl/cu113/torch-1.12.1%2Bcu113-cp310-cp310-linux_x86_64.whl#sha256=be682ef94e37cd3f0768b8ce6106705410189df2c365d65d7bc1bebb302d84cd
 
 

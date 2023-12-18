@@ -6,7 +6,7 @@ from app.utils.json import json_to_model
 from app.utils.index import get_index
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from llama_index import VectorStoreIndex
-from llama_index.llms.base import MessageRole, ChatMessage
+from llama_index.llms import MessageRole, ChatMessage
 from pydantic import BaseModel
 
 chat_router = r = APIRouter()
@@ -49,14 +49,14 @@ async def chat(
         )
         for m in data.messages
     ]
-
     # query chat engine
     chat_engine = index.as_chat_engine()
-    response = chat_engine.stream_chat(lastMessage.content, messages)
+    response = chat_engine.stream_chat(lastMessage.content,messages)
 
     # stream response
     async def event_generator():
         for token in response.response_gen:
+            print(token)
             # If client closes connection, stop sending events
             if await request.is_disconnected():
                 break
