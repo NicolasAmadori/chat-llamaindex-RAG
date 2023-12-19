@@ -40,6 +40,13 @@ RUN pip3 install --upgrade nltk==3.7
 RUN pip3 install --upgrade stqdm==0.0.4
 RUN pip3 install --upgrade datasets==2.6.1
 RUN pip3 install --upgrade wandb==0.13.5 
+RUN pip3 install pymilvus
+RUN pip3 install milvus
+RUN pip3 install fastapi
+RUN pip3 install uvicorn
+RUN pip3 install pypdf
+RUN pip3 install python-dotenv
+RUN pip3 install einops
 
 RUN pip3 install https://download.pytorch.org/whl/cu113/torch-1.12.1%2Bcu113-cp310-cp310-linux_x86_64.whl#sha256=be682ef94e37cd3f0768b8ce6106705410189df2c365d65d7bc1bebb302d84cd
 

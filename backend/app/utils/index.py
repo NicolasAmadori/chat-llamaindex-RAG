@@ -5,6 +5,7 @@ from typing import Any
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
+# from llama_index.vector_stores import MilvusVectorStore
 from llama_index import (
     SimpleDirectoryReader,
     StorageContext,
@@ -14,7 +15,6 @@ from llama_index import (
 )
 from llama_index.prompts import PromptTemplate
 from llama_index.llms import OpenAI
-
 
 STORAGE_DIR = "./storage"  # directory to cache the generated index
 DATA_DIR = "./data"  # directory containing the documents to index
@@ -81,23 +81,16 @@ class OurLLM(CustomLLM):
 
         yield CompletionResponse(text=text, delta=text)
  
-
-
-
-
-SYSTEM_PROMPT = """You are an AI assistant that answers questions in a friendly manner, based on the given source documents. Here are some rules you always follow:
-- Generate human readable output, avoid creating output with gibberish text.
-- Generate only the requested output, don't include any other language before or after the requested output.
-- Never say thank you, that you are happy to help, that you are an AI agent, etc. Just answer directly.
-- Generate professional language typically used in business documents in North America.
-- Never generate offensive or foul language.
-"""
-
-query_wrapper_prompt = PromptTemplate(" {query_str}\nAnswer: ")
-
 llm = OurLLM("microsoft/phi-1_5", device)
 
-
+# SYSTEM_PROMPT = """You are an AI assistant that answers questions in a friendly manner, based on the given source documents. Here are some rules you always follow:
+# - Generate human readable output, avoid creating output with gibberish text.
+# - Generate only the requested output, don't include any other language before or after the requested output.
+# - Never say thank you, that you are happy to help, that you are an AI agent, etc. Just answer directly.
+# - Generate professional language typically used in business documents in North America.
+# - Never generate offensive or foul language.
+# """
+# query_wrapper_prompt = PromptTemplate(" {query_str}\nAnswer: ")
 # HuggingFaceLLM(
 #     context_window=2048,
 #     max_new_tokens=256,
@@ -119,20 +112,21 @@ service_context = ServiceContext.from_defaults(
     llm=llm,
 )
 
-def get_index():
+def get_index(bot):
     logger = logging.getLogger("uvicorn")
     # check if storage already exists
     if not os.path.exists(STORAGE_DIR):
         logger.info("Creating new index")
         # load the documents and create the index
         documents = SimpleDirectoryReader(DATA_DIR).load_data()
-        index = VectorStoreIndex.from_documents(documents,service_context=service_context)
+        index = VectorStoreIndex.from_documents(documents, service_context=service_context)
         # store it for later
         index.storage_context.persist(STORAGE_DIR)
         logger.info(f"Finished creating new index. Stored in {STORAGE_DIR}")
     else:
         # load the existing index
         logger.info(f"Loading index from {STORAGE_DIR}...")
+        #vector_store = MilvusVectorStore(dim=1536, overwrite=True)
         storage_context = StorageContext.from_defaults(persist_dir=STORAGE_DIR)
         index = load_index_from_storage(storage_context,service_context=service_context)
         logger.info(f"Finished loading index from {STORAGE_DIR}")
