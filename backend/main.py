@@ -30,4 +30,4 @@ app.include_router(bot_router, prefix="/api/bot")
 
 
 if __name__ == "__main__":
-    uvicorn.run(app="main:app", host="0.0.0.0", port=37332,reload=True)
+    uvicorn.run(app="main:app", host="0.0.0.0", port=37331,reload=True)

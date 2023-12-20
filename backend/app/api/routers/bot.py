@@ -21,7 +21,7 @@ bots_list: List[_Bot] = []
 
 @r.get("")
 async def bots():
-    return [(bot.bot_name, bot.model_name) for bot in bots]
+    return [(bot.bot_name, bot.model_name) for bot in bots_list]
 
 @r.get("/available_models")
 async def available_models():
