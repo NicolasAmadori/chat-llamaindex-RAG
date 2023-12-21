@@ -8,6 +8,15 @@ from app.api.routers.chat import chat_router
 from app.api.routers.bot import bot_router
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from milvus import default_server
+from pymilvus import (
+    connections,
+    utility,
+    FieldSchema,
+    CollectionSchema,
+    DataType,
+    Collection,
+)
 
 app = FastAPI()
 
@@ -30,4 +39,8 @@ app.include_router(bot_router, prefix="/api/bot")
 
 
 if __name__ == "__main__":
+    default_server.start()
+    connections.connect("default", host="0.0.0.0")
     uvicorn.run(app="main:app", host="0.0.0.0", port=37331,reload=True)
+    
+
