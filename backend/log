@@ -1,10 +1,1 @@
-armando
-microsoft/phi-1_5
-microsoft/phi-1_5
-False
-[]
-model_name=<_availableModels.phi_1_5: 'microsoft/phi-1_5'> temperature=37.7 topP=1 sendMemory=True maxTokens=23 maxHistory=12
-armando
-armando
-1703005933865
-bot created
+model name: TheBloke/Llama-2-7b-Chat-GPTQ:gptq-4bit-64g-actorder_True

@@ -99,4 +99,12 @@ async def delete_bot(
 
     # convert messages coming from the request to type ChatMessage
     
-    
+
+def get_bot_by_name(bot_name: str) -> _Bot:
+    for bot in bots_list:
+        if bot.bot_name == bot_name:
+            return bot
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Bot not found",
+    )

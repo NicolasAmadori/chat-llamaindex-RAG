@@ -8,6 +8,7 @@ class _availableModels(Enum):
     phi_2 = "microsoft/phi-2"
     mistral = "mistralai/Mistral-7B-Instruct-v0.1"
     llama = "meta-llama/Llama-2-7b"
+    mixtral = "TheBloke/Llama-2-7b-Chat-GPTQ:gptq-4bit-64g-actorder_True"
 
 class _Message(BaseModel):
     role: MessageRole

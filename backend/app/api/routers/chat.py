@@ -5,6 +5,7 @@ from fastapi.responses import StreamingResponse
 
 from app.utils.json import json_to_model
 from app.utils.index import get_index
+from app.api.routers.bot import get_bot_by_name
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from llama_index import VectorStoreIndex
 from llama_index.llms import MessageRole, ChatMessage
@@ -23,6 +24,10 @@ async def chat(
     data: _ChatData = Depends(json_to_model(_ChatData)),
     index: Any = None
 ):
+
+    """
+        TODO - IDK what this function does
+    """
     print(f"[data]: {data}")
     # check preconditions and get last message
     with open('log', 'w') as log_file:
@@ -41,8 +46,8 @@ async def chat(
             detail="Last message must be from user",
         )
     # convert messages coming from the request to type ChatMessage
-    bot_name = data.bot_name
-    index = get_index(bot_name=bot_name)
+    bot = get_bot_by_name(data.bot_name)
+    index = get_index(bot)
 
     messages = [
         ChatMessage(
