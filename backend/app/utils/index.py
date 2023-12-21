@@ -3,7 +3,7 @@ import os
 from typing import Any
 from app.utils.model import *
 
-# from llama_index.vector_stores import MilvusVectorStore
+from llama_index.vector_stores import MilvusVectorStore
 from llama_index import (
     SimpleDirectoryReader,
     StorageContext,
@@ -28,28 +28,28 @@ def get_index(bot): # TODO - decide if use the name or the index
 
     # TO fix
     if not os.path.exists(STORAGE_DIR+"/"+bot.bot_name):
+        
         if not os.path.exists(DATA_DIR+"/"+bot.bot_name):
             os.makedirs(DATA_DIR+"/"+bot.bot_name)
+
         logger.info("Creating new index")
         service_context = create_service_context(bot)
         service_contexts[bot.bot_name] = service_context
-        # load the documents and create the index
         
-        # if folder contains files
         if len(os.listdir(DATA_DIR+"/"+bot.bot_name)) > 0:
             documents = SimpleDirectoryReader(DATA_DIR+"/"+bot.bot_name).load_data() 
         else:
             documents = []
-        index = VectorStoreIndex.from_documents(documents, service_context=service_context)
-        # store it for later
-        index.storage_context.persist(STORAGE_DIR+"/"+bot.bot_name)
+        
+        vector_store = MilvusVectorStore(dim=1536, overwrite=True)
+        storage_context = StorageContext.from_defaults(vector_store=vector_store, persist_dir=STORAGE_DIR+"/"+bot.bot_name)
+        index = VectorStoreIndex.from_documents(documents, storage_context=storage_context, service_context=service_context)
         logger.info(f"Finished creating new index. Stored in {STORAGE_DIR+'/'+bot.bot_name}")
     else:
         service_context = service_contexts[bot.bot_name]
-        # load the existing index
         logger.info(f"Loading index from {STORAGE_DIR+'/'+bot.bot_name}...")
-        #vector_store = MilvusVectorStore(dim=1536, overwrite=True)
-        storage_context = StorageContext.from_defaults(persist_dir=STORAGE_DIR+"/"+bot.bot_name)
+        vector_store = MilvusVectorStore(dim=1536, overwrite=True)
+        storage_context = StorageContext.from_defaults(vector_store=vector_store, persist_dir=STORAGE_DIR+"/"+bot.bot_name)
         index = load_index_from_storage(storage_context,service_context=service_context)
         logger.info(f"Finished loading index from {STORAGE_DIR+'/'+bot.bot_name}")
     return index
