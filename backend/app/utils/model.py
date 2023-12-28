@@ -27,6 +27,9 @@ class OurLLM(CustomLLM):
     context_window: int = None
     num_output: int = None
     max_length: int = None
+    temperature: float = None
+    topP: float = None
+    max_new_tokens: int = None
 
     def __init__(self, model_name, temperature, topP, max_length, device, context_window = 2048, num_output = 256):
         super().__init__()
@@ -36,13 +39,28 @@ class OurLLM(CustomLLM):
             revision = "main"
             
         self.model_name = model_name
-        self.model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype="auto", trust_remote_code=True, revision = revision)
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
         self.device = device
 
         self.context_window = context_window
         self.num_output = num_output
         self.max_length = max_length
+        self.temperature = temperature
+        self.topP = topP
+        # TODO: check if this is the right value 
+        self.max_new_tokens = 508
+
+        self.model = AutoModelForCausalLM.from_pretrained(
+            self.model_name, 
+            torch_dtype="auto", 
+            trust_remote_code=True, 
+            revision = revision,
+            temperature = self.temperature,
+            top_p = self.topP,
+            use_cache = True
+            )
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            self.model_name, 
+            trust_remote_code=True)
 
         self.model.to(device)
 
@@ -58,7 +76,7 @@ class OurLLM(CustomLLM):
     @llm_completion_callback()
     def complete(self, prompt: str, **kwargs) -> CompletionResponse:
         inputs = self.tokenizer(prompt, return_tensors="pt", return_attention_mask=False).to(self.device)
-        outputs = self.model.generate(**inputs, max_length=self.max_length)
+        outputs = self.model.generate(**inputs, max_length=self.max_length, max_new_tokens=self.max_new_tokens)
         text = self.tokenizer.batch_decode(outputs)[0]
 
         return CompletionResponse(text=text)
@@ -68,7 +86,7 @@ class OurLLM(CustomLLM):
         self, prompt: str, **kwargs
     ) -> CompletionResponseGen:
         inputs = self.tokenizer(prompt, return_tensors="pt", return_attention_mask=False).to(self.device)
-        outputs = self.model.generate(**inputs, max_length=self.max_length)
+        outputs = self.model.generate(**inputs, max_length=self.max_length, max_new_tokens=self.max_new_tokens)
         text = self.tokenizer.batch_decode(outputs)[0]
 
         yield CompletionResponse(text=text, delta=text)
