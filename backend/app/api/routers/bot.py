@@ -1,6 +1,7 @@
 from typing import List, Any
 import os
 import shutil
+import psutil
 import json
 
 import random
@@ -21,6 +22,17 @@ bot_router = r = APIRouter()
 STORAGE_DIR = "./storage"  # directory to cache the generated index
 
 bots_list: List[_Bot] = []
+
+@r.on_event("startup")
+async def startup_event():
+    # Clear the storage dir on startup
+    if os.path.exists(STORAGE_DIR):
+        print("Clearing storage dir")
+        shutil.rmtree(STORAGE_DIR)
+
+    os.mkdir(STORAGE_DIR)
+
+
 
 @r.get("")
 async def bots():
