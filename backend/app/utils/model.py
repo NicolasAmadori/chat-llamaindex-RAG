@@ -1,4 +1,5 @@
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer
+from threading import Thread
 from typing import Any
 import logging
 import torch
@@ -7,6 +8,7 @@ from app.utils.interface import _Bot, _availableModels, _LLMConfig
 from llama_index import ServiceContext
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
+print(f"Using device: {device}")
 logger = logging.getLogger("uvicorn")
 
 from llama_index.llms import (
@@ -47,17 +49,24 @@ class OurLLM(CustomLLM):
         self.temperature = temperature
         self.topP = topP
         # TODO: check if this is the right value 
-        self.max_new_tokens = 508
+        self.max_new_tokens = 10
 
-        self.model = AutoModelForCausalLM.from_pretrained(
-            self.model_name, 
-            torch_dtype="auto", 
-            trust_remote_code=True, 
-            revision = revision,
-            temperature = self.temperature,
-            top_p = self.topP,
-            use_cache = True
-            )
+        do_sample = self.temperature != 0.0 or self.topP != 1.0
+
+        model_params = {
+            "torch_dtype": "auto",
+            "trust_remote_code": True,
+            "revision": revision,
+            "temperature": self.temperature,
+            "top_p": self.topP,
+            "do_sample": do_sample,
+        }
+        try:
+            self.model = AutoModelForCausalLM.from_pretrained(self.model_name, **model_params, use_cache = True)
+        except TypeError:
+            # Model like phi 2 and 1.5 crash if we set use_cache
+            self.model = AutoModelForCausalLM.from_pretrained(self.model_name, **model_params)    
+
         self.tokenizer = AutoTokenizer.from_pretrained(
             self.model_name, 
             trust_remote_code=True)
@@ -84,12 +93,35 @@ class OurLLM(CustomLLM):
     @llm_completion_callback()
     def stream_complete(
         self, prompt: str, **kwargs
-    ) -> CompletionResponseGen:
+    ) -> CompletionResponseGen: 
+        
         inputs = self.tokenizer(prompt, return_tensors="pt", return_attention_mask=False).to(self.device)
         outputs = self.model.generate(**inputs, max_length=self.max_length, max_new_tokens=self.max_new_tokens)
         text = self.tokenizer.batch_decode(outputs)[0]
 
         yield CompletionResponse(text=text, delta=text)
+        
+        """
+        Code for streaming the ouput of the model, i leave it commented because 
+        it works really, really slowly and i don't know why.
+        It is based on https://huggingface.co/docs/transformers/v4.36.1/en/internal/generation_utils#transformers.TextStreamer
+
+        with torch.no_grad():
+            inputs = self.tokenizer(prompt, return_tensors="pt", return_attention_mask=False).to(self.device)
+            streamer = TextIteratorStreamer(self.tokenizer, skip_prompt=True)
+
+            generation_kwargs = dict(inputs, max_length=self.max_length, max_new_tokens=self.max_new_tokens, streamer=streamer)
+            generation_thread = Thread(target=self.model.generate, kwargs=generation_kwargs)
+            generation_thread.start()
+
+            accumulated_text = ""
+            for text in streamer:
+                accumulated_text += text
+                print(f"Streamed text: {text}")
+                yield CompletionResponse(text=accumulated_text, delta=text)
+
+        """
+
  
 
 def create_service_context(bot: _Bot):
