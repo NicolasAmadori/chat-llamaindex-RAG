@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from typing import List, Any
 from enum import Enum
 from llama_index.llms import MessageRole, ChatMessage
+from time import time
 
 class _availableModels(Enum):
     phi_1_5 = "microsoft/phi-1_5"
@@ -12,7 +13,8 @@ class _availableModels(Enum):
 
 class _Message(BaseModel):
     role: MessageRole
-    date: int
+    # date is default as now
+    date: int = round(time()*1000)
     content: str
 
 
