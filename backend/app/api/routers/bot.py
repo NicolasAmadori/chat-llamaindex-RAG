@@ -1,5 +1,6 @@
 from typing import List, Any
 import os
+import shutil
 import json
 
 import random
@@ -17,6 +18,8 @@ from app.utils.interface import _Bot, _Message, _availableModels, _LLMConfig
 
 bot_router = r = APIRouter()
 
+STORAGE_DIR = "./storage"  # directory to cache the generated index
+
 bots_list: List[_Bot] = []
 
 @r.get("")
@@ -29,7 +32,6 @@ async def available_models():
 
 @r.post("")
 async def create_bot(request: Request):
-
     try:
         data = await request.json()
         bot = data['bot']
@@ -38,11 +40,24 @@ async def create_bot(request: Request):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Wrong body format",
         )
-    
     if bot is None or None in [bot['bot_name'], bot['model_name'], bot['hide_context'], bot['context'], bot['model_config'], bot['bot_hello'], bot['data_source']]:
+        with open('log', 'w') as f:
+            f.write('error in bot creation\n')
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="No bot data provided",
+        )
+
+    if bot['model_name'] not in [model.value for model in _availableModels]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Model not available",
+        )
+
+    if bot['bot_name'] in [bot.bot_name for bot in bots_list]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Bot name already exists",
         )
     
     id:str = str(random.randint(0, 1000000000))
@@ -84,19 +99,29 @@ async def create_bot(request: Request):
     return {"id": id, "bot_name": bot_name, "model_name": model_name, "tokenizer_name": tokenizer_name, "hideContext": hide_context, "context": context, "modelConfig": model_config, "botHello": bot_hello, "dataSource": data_source, "createdAt": created_at}
 
 @r.delete("")
-async def delete_bot(
-    request: Request,
-    bot: str = None,
-    index: Any = None
-):
-    print(f"[bot]: {bot}")
-    # check preconditions and get last message
-    if bot.bot_name == None or bot.model_name == None or bot.tokenizer_name == None:
+async def delete_bot(request: Request):
+    try:
+        data = await request.json()
+        bot_name = data['bot_name']
+    except:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No messages provided",
+            detail="Wrong body format",
+        )
+    # check preconditions and get last message
+    if bot_name == None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No bot name provided"
         )
 
+    bot = get_bot_by_name(bot_name)
+    bots_list.remove(bot)
+    
+    if os.path.exists(STORAGE_DIR+"/"+bot_name):
+        shutil.rmtree(STORAGE_DIR+"/"+bot_name)
+
+    return {"message": "Bot deleted"}
     # convert messages coming from the request to type ChatMessage
     
 
