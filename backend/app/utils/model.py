@@ -49,7 +49,7 @@ class OurLLM(CustomLLM):
         self.temperature = temperature
         self.topP = topP
         # TODO: check if this is the right value 
-        self.max_new_tokens = 10
+        self.max_new_tokens = 500
 
         do_sample = self.temperature != 0.0 or self.topP != 1.0
 

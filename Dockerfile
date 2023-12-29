@@ -48,6 +48,6 @@ RUN pip3 install pypdf
 RUN pip3 install python-dotenv
 RUN pip3 install einops
 
-RUN pip3 install https://download.pytorch.org/whl/cu113/torch-1.12.1%2Bcu113-cp310-cp310-linux_x86_64.whl#sha256=be682ef94e37cd3f0768b8ce6106705410189df2c365d65d7bc1bebb302d84cd
-
+# RUN pip3 install https://download.pytorch.org/whl/cu113/torch-1.12.1%2Bcu113-cp310-cp310-linux_x86_64.whl#sha256=be682ef94e37cd3f0768b8ce6106705410189df2c365d65d7bc1bebb302d84cd
+RUN pip3 install torch
 
