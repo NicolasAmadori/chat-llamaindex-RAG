@@ -1,9 +1,9 @@
-"use client";
-
-import { Loader2, Paperclip } from "lucide-react";
+import { buttonVariants } from "@/app/components/ui/button";
+import { cn } from "@/app/lib/utils";
+import { FileWrap } from "@/app/utils/file";
 import { ChangeEvent, useState } from "react";
-import { buttonVariants } from "./button";
-import { cn } from "./lib/utils";
+import Locale from "../../locales";
+import { Paperclip, Loader2 } from "lucide-react";
 
 export interface FileUploaderProps {
   config?: {
@@ -13,8 +13,8 @@ export interface FileUploaderProps {
     checkExtension?: (extension: string) => string | null;
     disabled: boolean;
   };
-  onFileUpload: (file: File) => Promise<void>;
-  onFileError?: (errMsg: string) => void;
+  onUpload: (file: FileWrap) => Promise<void>;
+  onError: (errMsg: string) => void;
 }
 
 const DEFAULT_INPUT_ID = "fileInput";
@@ -22,8 +22,8 @@ const DEFAULT_FILE_SIZE_LIMIT = 1024 * 1024 * 50; // 50 MB
 
 export default function FileUploader({
   config,
-  onFileUpload,
-  onFileError,
+  onUpload,
+  onError,
 }: FileUploaderProps) {
   const [uploading, setUploading] = useState(false);
 
@@ -32,15 +32,13 @@ export default function FileUploader({
   const allowedExtensions = config?.allowedExtensions;
   const defaultCheckExtension = (extension: string) => {
     if (allowedExtensions && !allowedExtensions.includes(extension)) {
-      return `Invalid file type. Please select a file with one of these formats: ${allowedExtensions!.join(
-        ",",
-      )}`;
+      return Locale.Upload.Invalid(allowedExtensions!.join(","));
     }
     return null;
   };
   const checkExtension = config?.checkExtension ?? defaultCheckExtension;
 
-  const isFileSizeExceeded = (file: File) => {
+  const isFileSizeExceeded = (file: FileWrap) => {
     return file.size > fileSizeLimit;
   };
 
@@ -54,26 +52,23 @@ export default function FileUploader({
     if (!file) return;
 
     setUploading(true);
-    await handleUpload(file);
+    const fileWrap = new FileWrap(file);
+    await handleUpload(fileWrap);
     resetInput();
     setUploading(false);
   };
 
-  const handleUpload = async (file: File) => {
-    const onFileUploadError = onFileError || window.alert;
-    const fileExtension = file.name.split(".").pop() || "";
-    const extensionFileError = checkExtension(fileExtension);
-    if (extensionFileError) {
-      return onFileUploadError(extensionFileError);
+  const handleUpload = async (file: FileWrap) => {
+    const extensionError = checkExtension(file.extension);
+    if (extensionError) {
+      return onError(extensionError);
     }
 
     if (isFileSizeExceeded(file)) {
-      return onFileUploadError(
-        `File size exceeded. Limit is ${fileSizeLimit / 1024 / 1024} MB`,
-      );
+      return onError(Locale.Upload.SizeExceeded(fileSizeLimit / 1024 / 1024));
     }
 
-    await onFileUpload(file);
+    await onUpload(file);
   };
 
   return (
