@@ -1,7 +1,7 @@
 from typing import List
 import os
 
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, Response
 
 from app.utils.json import json_to_model
 from app.utils.index import get_index
@@ -11,6 +11,9 @@ from llama_index import VectorStoreIndex
 from llama_index.llms import MessageRole, ChatMessage
 
 from app.utils.interface import _ChatData
+
+from llama_index.memory import ChatMemoryBuffer
+
 
 from typing import Any
 
@@ -24,20 +27,11 @@ async def chat(
     data: _ChatData = Depends(json_to_model(_ChatData)),
     index: Any = None
 ):
-
-    """
-        TODO - IDK what this function does
-    """
-    print(f"[data]: {data}")
     # check preconditions and get last message
-    with open('log', 'w') as log_file:
-        log_file.write(str(data.messages))
-        log_file.write('\n\n')
-        log_file.write(str(data.bot_name))
     if len(data.messages) == 0 or data.bot_name == None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No messages provided",
+            detail="No messages provided" if len(data.messages) == 0 else "No bot name provided",
         )
     lastMessage = data.messages.pop()
     if lastMessage.role != MessageRole.USER:
@@ -57,11 +51,28 @@ async def chat(
         for m in data.messages
     ]
     # query chat engine
-    chat_engine = index.as_chat_engine()
-    response = chat_engine.stream_chat(lastMessage.content,messages)
 
+    memory = ChatMemoryBuffer.from_defaults(token_limit=1500)
+
+    #chat_engine = index.as_chat_engine(
+    #    chat_mode="context",
+    #    memory=memory,
+    #    system_prompt=("You are a chatbot, able to have normal interactions, as well as answer user question based on the context provided.")
+    #)
+    #response = chat_engine.chat(lastMessage.content)#,messages)
+    query_engine = index.as_query_engine()
+    response = query_engine.query(lastMessage.content)
+    with open('log_respone', 'w') as f:
+        f.write('[Response] text: '+str(response)+'\n')
+    response = response.response
+
+    with open('log_respone', 'w') as f:
+        f.write('[Response] text: '+response+'\n')   
+
+    return Response(response, media_type="text/plain")
+    """
     # stream response
-    async def event_generator():
+    async def event_generator():    
         for token in response.response_gen:
             #print(token)
             # If client closes connection, stop sending events
@@ -70,3 +81,4 @@ async def chat(
             yield token
 
     return StreamingResponse(event_generator(), media_type="text/plain")
+    """
