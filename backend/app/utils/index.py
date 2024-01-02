@@ -19,6 +19,13 @@ DATA_DIR = "./data"  # directory containing the documents to index
 
 
 
+vector_store = None # MilvusVectorStore(dim=768, overwrite=True)
+
+def initialize_vector_store():
+    global vector_store
+    vector_store = MilvusVectorStore(dim=768, overwrite=True)
+
+
 # one service context object for each bot_name
 service_contexts = {}
 
@@ -26,7 +33,6 @@ def get_index(bot): # TODO - decide if use the name or the index
     """
      Return a llamaindex index storage 
     """
-    vector_store = MilvusVectorStore(dim=1536, overwrite=True)
     logger = logging.getLogger("uvicorn")
     # check if storage already exists
 

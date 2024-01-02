@@ -17,6 +17,7 @@ from pymilvus import (
     DataType,
     Collection,
 )
+from app.utils.index import initialize_vector_store
 
 app = FastAPI()
 
@@ -41,6 +42,5 @@ app.include_router(bot_router, prefix="/api/bot")
 if __name__ == "__main__":
     default_server.start()
     connections.connect("default", host="0.0.0.0")
+    initialize_vector_store()
     uvicorn.run(app="main:app", host="0.0.0.0", port=37331,reload=True)
-    
-
