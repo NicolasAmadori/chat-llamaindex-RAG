@@ -20,6 +20,7 @@ from app.utils.interface import _Bot, _Message, _availableModels, _LLMConfig
 bot_router = r = APIRouter()
 
 STORAGE_DIR = "./storage"  # directory to cache the generated index
+BOT_PARAMS = ['bot_name', 'model_name', 'hide_context', 'context', 'model_config', 'bot_hello', 'data_source']
 
 bots_list: List[_Bot] = []
 
@@ -32,11 +33,18 @@ async def startup_event():
 
     os.mkdir(STORAGE_DIR)
 
+    data_folder = "./data"
+    if os.path.exists(data_folder):
+        print("Clearing data dir")
+        shutil.rmtree(data_folder)
+    
+    os.mkdir(data_folder)
+
 
 
 @r.get("")
 async def bots():
-    return [(bot.bot_name, bot.model_name) for bot in bots_list]
+    return [{'name': bot.bot_name, 'model':bot.model_name} for bot in bots_list]
 
 @r.get("/available_models")
 async def available_models():
@@ -52,9 +60,8 @@ async def create_bot(request: Request):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Wrong body format",
         )
-    if bot is None or None in [bot['bot_name'], bot['model_name'], bot['hide_context'], bot['context'], bot['model_config'], bot['bot_hello'], bot['data_source']]:
-        with open('log', 'w') as f:
-            f.write('error in bot creation\n')
+    # if bot is None or None in [bot['bot_name'], bot['model_name'], bot['hide_context'], bot['context'], bot['model_config'], bot['bot_hello'], bot['data_source']]:
+    if bot is None or (set(BOT_PARAMS) & set(bot.keys()) != set(BOT_PARAMS)): 
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="No bot data provided",
@@ -72,18 +79,8 @@ async def create_bot(request: Request):
             detail="Bot name already exists",
         )
     
-    id:str = str(random.randint(0, 1000000000))
-    bot_name: str = bot['bot_name']
-    model_name: str = bot['model_name']
-    tokenizer_name: str = bot['model_name'] # check in the future
-    hide_context: bool = bot['hide_context']
-    context: List[_Message] = bot['context']
-    config = bot['model_config']
-    bot_hello: str = bot['bot_hello']
-    data_source: str = bot['data_source']
-    created_at: int = round(time()*1000)
-
     try:
+        config = bot['model_config']
         model_config: _LLMConfig = _LLMConfig(**config)
     except:
         raise HTTPException(
@@ -91,24 +88,30 @@ async def create_bot(request: Request):
             detail="Wrong model config format",
         )
 
-    bot = _Bot(
-        id=id,
-        bot_name=bot_name,
-        model_name=model_name,
-        tokenizer_name=tokenizer_name,
-        hideContext=hide_context,
-        context=context,
-        modelConfig=model_config,
-        botHello=bot_hello,
-        dataSource=data_source,
-        createdAt=created_at
-    )
+    params = {
+        'id' : str(random.randint(0, 1000000000)),
+        'bot_name' : bot['bot_name'],
+        'model_name' : bot['model_name'],
+        'tokenizer_name' : bot['model_name'], # check in the future
+        'hideContext': bot['hide_context'],
+        'context': bot['context'],
+        'modelConfig': model_config,
+        'botHello': bot['bot_hello'],
+        'dataSource': bot['data_source'],
+        'createdAt' : round(time()*1000)
+    }
+    
+
+    
+
+    bot = _Bot(**params)
 
     bots_list.append(bot)
     
     #index = get_index(bot)
 
-    return {"id": id, "bot_name": bot_name, "model_name": model_name, "tokenizer_name": tokenizer_name, "hideContext": hide_context, "context": context, "modelConfig": model_config, "botHello": bot_hello, "dataSource": data_source, "createdAt": created_at}
+    return {"message": "Bot created", "bot": bot}
+    # return {"id": id, "bot_name": bot_name, "model_name": model_name, "tokenizer_name": tokenizer_name, "hideContext": hide_context, "context": context, "modelConfig": model_config, "botHello": bot_hello, "dataSource": data_source, "createdAt": created_at}
 
 @r.delete("")
 async def delete_bot(request: Request):
