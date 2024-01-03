@@ -33,12 +33,12 @@ async def startup_event():
 
     os.mkdir(STORAGE_DIR)
 
-    data_folder = "./data"
-    if os.path.exists(data_folder):
-        print("Clearing data dir")
-        shutil.rmtree(data_folder)
+    #data_folder = "./data"
+    #if os.path.exists(data_folder):
+    #    print("Clearing data dir")
+    #    shutil.rmtree(data_folder)
     
-    os.mkdir(data_folder)
+    #os.mkdir(data_folder)
 
 
 
@@ -101,7 +101,6 @@ async def create_bot(request: Request):
         'createdAt' : round(time()*1000)
     }
     
-
     
 
     bot = _Bot(**params)

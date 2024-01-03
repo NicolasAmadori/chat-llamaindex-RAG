@@ -2,7 +2,7 @@
   "name": "chatbot-with-rag",
   "version": "0.1.0",
   "scripts": {
-    "dev": "NEXT_PUBLIC_CHAT_API=http://137.204.107.43:37331/api/chat next dev -p 37333",
+    "dev": "NEXT_PUBLIC_CHAT_API=http://137.204.107.43:37331/api next dev -p 37333",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

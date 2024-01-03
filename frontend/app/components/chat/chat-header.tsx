@@ -11,8 +11,8 @@ export default function ChatHeader() {
   const botStore = useBotStore();
   const bot = botStore.currentBot();
   const session = botStore.currentSession();
-  const numberOfMessages =
-    (bot.botHello?.length ? 1 : 0) + session.messages.length;
+  const numberOfMessages = 0;
+    //(bot.botHello?.length ? 1 : 0) + session.messages.length;
   return (
     <div className="relative">
       <div className="absolute top-4 left-5">
@@ -28,7 +28,7 @@ export default function ChatHeader() {
         )}
       </div>
       <div className="text-center py-4">
-        <Typography.H4>{bot.name}</Typography.H4>
+        <Typography.H4>{bot? bot.name : "no bot"}</Typography.H4>
         <div className="text-sm text-muted-foreground">
           {Locale.Chat.SubTitle(numberOfMessages)}
         </div>

@@ -70,6 +70,10 @@ const en = {
         Title: "Max Tokens",
         SubTitle: "Maximum length of input tokens and generated tokens",
       },
+      MaxHistory: {
+        Title: "Max History",
+        SubTitle: "Maximum length of history",
+      },
       Backup: {
         Download: {
           Title: "Backup Bots",

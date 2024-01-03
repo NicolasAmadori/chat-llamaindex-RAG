@@ -25,8 +25,8 @@ export const BotItemContextProvider = (props: {
   const navigate = useNavigate();
   const { setShowSidebar } = useSidebarContext();
 
-  const cloneBot = () => {
-    const newBot = botStore.create(bot, {
+  const cloneBot = async () => {
+    const newBot = await botStore.create(bot, {
       reset: true,
     });
     newBot.name = `My ${bot.name}`;

@@ -195,8 +195,7 @@ export async function callSession(
   // make request
   const controller = new AbortController();
   ChatControllerPool.addController(bot.id, controller);
-  const api = new LLMApi();
-  await api.chat({
+  await LLMApi.chat({
     datasource: bot.datasource,
     embeddings,
     message: message,

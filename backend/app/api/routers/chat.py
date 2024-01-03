@@ -2,7 +2,7 @@ from typing import List
 import os
 
 from fastapi.responses import StreamingResponse, Response
-
+from llama_index.prompts import PromptTemplate
 from app.utils.json import json_to_model
 from app.utils.index import get_index
 from app.api.routers.bot import get_bot_by_name
@@ -17,6 +17,10 @@ from llama_index.memory import ChatMemoryBuffer
 
 from typing import Any
 
+import logging
+
+logger = logging.getLogger("uvicorn")
+
 chat_router = r = APIRouter()
 
 @r.post("")
@@ -26,7 +30,8 @@ async def chat(
     # we need to use Depends(json_to_model(_ChatData)) here
     data: _ChatData = Depends(json_to_model(_ChatData)),
     index: Any = None
-):
+):    
+
     # check preconditions and get last message
     if len(data.messages) == 0 or data.bot_name == None:
         raise HTTPException(
@@ -54,20 +59,37 @@ async def chat(
 
     memory = ChatMemoryBuffer.from_defaults(token_limit=1500)
 
-    #chat_engine = index.as_chat_engine(
-    #    chat_mode="context",
-    #    memory=memory,
-    #    system_prompt=("You are a chatbot, able to have normal interactions, as well as answer user question based on the context provided.")
+    chat_engine = index.as_chat_engine(
+        chat_mode="context",
+        memory=memory,
+        system_prompt=("You are a chatbot, able to have normal interactions, as well as answer user question based on the context provided.")
+    )
+    response = chat_engine.chat(lastMessage.content)#,messages)
+
+    # New propmpt
+    #custom_prompt_str = (
+    #    "Context information is below.\n"
+    #    "---------------------\n"
+    #    "{context_str}\n"
+    #    "---------------------\n"
+    #    "Given the context information and prior knowledge, answer the following question.\n"
+    #    "Query: {query_str}\n"
+    #    "Answer: "
     #)
-    #response = chat_engine.chat(lastMessage.content)#,messages)
-    query_engine = index.as_query_engine()
-    response = query_engine.query(lastMessage.content)
-    with open('log_respone', 'w') as f:
-        f.write('[Response] text: '+str(response)+'\n')
+    #custom_prompt = PromptTemplate(custom_prompt_str)
+    #query_engine = index.as_query_engine(response_mode="compact")
+    #query_engine.update_prompts(
+    #    {"response_synthesizer:text_qa_template": custom_prompt}
+    #)
+    #response = query_engine.query(lastMessage.content)
+    #with open('log_respone', 'w') as f:
+        # f.write('[Response] text: '+str(response)+'\n')
+        # f.write([f'[TYPE] {str(type(response))}\n'])
+    #logger.info(f"response: {response}")
     response = response.response
 
-    with open('log_respone', 'w') as f:
-        f.write('[Response] text: '+response+'\n')   
+    # with open('log_respone', 'w') as f:
+    #     f.write('[Response] text: '+response+'\n')   
 
     return Response(response, media_type="text/plain")
     """

@@ -170,7 +170,10 @@ export default function ChatInput(props: ChatInputProps) {
 
   const autoFocus = !false; // wont auto focus on mobile screen
 
-  const isRunning = ChatControllerPool.isRunning(bot.id);
+  let isRunning = false
+  if (bot){
+    isRunning = ChatControllerPool.isRunning(bot.id);
+  }
 
   const removeImage = () => {
     setImageFile(undefined);

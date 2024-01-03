@@ -48,23 +48,25 @@ export function Chat() {
   useEffect(() => {
     botStore.updateBotSession((session) => {
       const stopTiming = Date.now() - REQUEST_TIMEOUT_MS;
-      session.messages.forEach((m) => {
-        // check if should stop all stale messages
-        if (m.isError || (m.date && new Date(m.date).getTime() < stopTiming)) {
-          if (m.streaming) {
-            m.streaming = false;
-          }
+      if (session.messages){
+        session.messages.forEach((m) => {
+          // check if should stop all stale messages
+          if (m.isError || (m.date && new Date(m.date).getTime() < stopTiming)) {
+            if (m.streaming) {
+              m.streaming = false;
+            }
 
-          if (m.content.length === 0) {
-            m.isError = true;
-            m.content = prettyObject({
-              error: true,
-              message: "empty response",
-            });
+            if (m.content.length === 0) {
+              m.isError = true;
+              m.content = prettyObject({
+                error: true,
+                message: "empty response",
+              });
+            }
           }
-        }
-      });
-    }, bot.id);
+        });
+      }
+    }, bot ? bot.id : "-1");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -80,9 +82,10 @@ export function Chat() {
     deleteMessage(msgId);
   };
 
-  const context: ChatMessage[] = useMemo(() => {
-    return bot.hideContext ? [] : bot.context.slice();
-  }, [bot.context, bot.hideContext]);
+  const context: ChatMessage[] = []
+  // useMemo(() => {
+  //   return bot.hideContext ? [] : bot.context.slice();
+  // }, [bot.context, bot.hideContext]);
 
   const getUrlTypePrefix = (type: string) => {
     if (type === "text/html") return "HTML";
@@ -94,20 +97,21 @@ export function Chat() {
   // preview messages
   const renderMessages = useMemo(() => {
     const getFrontendMessages = (messages: ChatMessage[]) => {
-      return messages.map((message) => {
-        if (!message.urlDetail || isImageFileType(message.urlDetail.type))
-          return message;
-        const urlTypePrefix = getUrlTypePrefix(message.urlDetail.type);
-        const sizeInKB = Math.round(message.urlDetail.size / 1024);
-        return {
-          ...message,
-          content: `${message.urlDetail.url}\n\`${urlTypePrefix} • ${sizeInKB} KB\``,
-        };
-      });
+      return []
+      // return messages.map((message) => {
+      //   if (!message.urlDetail || isImageFileType(message.urlDetail.type))
+      //     return message;
+      //   const urlTypePrefix = getUrlTypePrefix(message.urlDetail.type);
+      //   const sizeInKB = Math.round(message.urlDetail.size / 1024);
+      //   return {
+      //     ...message,
+      //     content: `${message.urlDetail.url}\n\`${urlTypePrefix} • ${sizeInKB} KB\``,
+      //   };
+      // });
     };
 
     const getUrlPreviewMessage = () => {
-      const lastMessage = session.messages[session.messages.length - 1];
+      const lastMessage = undefined//session.messages[session.messages.length - 1];
       const showPreviewUrl = temporaryURLInput && !lastMessage?.streaming;
       let previewUrlMessage: ChatMessage | undefined;
 
@@ -122,18 +126,20 @@ export function Chat() {
 
     return context
       .concat(
-        bot.botHello
-          ? [
-              createMessage({
-                role: "assistant",
-                content: bot.botHello,
-              }),
-            ]
-          : [],
+        bot ?
+          bot.botHello
+            ? [
+                createMessage({
+                  role: "assistant",
+                  content: bot.botHello,
+                }),
+              ]
+            : []
+        : [],
       )
       .concat(getFrontendMessages(session.messages))
       .concat(getUrlPreviewMessage() || []);
-  }, [session.messages, bot.botHello, temporaryURLInput, context]);
+  }, [session.messages, bot ? bot.botHello :  "", temporaryURLInput, context]);
 
   const [msgRenderIndex, _setMsgRenderIndex] = useState(
     Math.max(0, renderMessages.length - CHAT_PAGE_SIZE),
@@ -193,13 +199,16 @@ export function Chat() {
       } else {
         session.clearContextIndex = session.messages.length;
       }
-    }, bot.id);
+    }, bot ? bot.id : "-1");
   };
-  const stop = () => ChatControllerPool.stop(bot.id);
-  const isRunning = ChatControllerPool.isRunning(bot.id);
-
+  const stop = () => ChatControllerPool.stop(bot ? bot.id : "-1");
+  let isRunning = false
+  if (bot) {
+    isRunning = ChatControllerPool.isRunning(bot.id);
+  }
+  //ciao
   return (
-    <div className="flex flex-col relative h-full" key={bot.id}>
+    <div className="flex flex-col relative h-full" key={bot ? bot.id : "-1"}>
       <ChatHeader />
       <ScrollArea
         className="flex-1 overflow-auto overflow-x-hidden relative overscroll-none pb-10 p-5"

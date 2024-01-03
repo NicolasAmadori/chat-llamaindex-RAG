@@ -36,6 +36,9 @@ const ModalConfigValidator = {
   maxTokens(x: number) {
     return limitNumber(x, 0, 4096, 2000);
   },
+  maxHistory(x: number) {
+    return limitNumber(x, 0, 4096, 2000);
+  },
   temperature(x: number) {
     return limitNumber(x, 0, 1, 1);
   },
@@ -64,7 +67,7 @@ export function ModelConfigList(props: {
               <SelectValue placeholder="Select model" />
             </SelectTrigger>
             <SelectContent>
-              {ALL_MODELS.map((model) => (
+              {ALL_MODELS.map((model: any) => (
                 <SelectItem value={model} key={model}>
                   {model}
                 </SelectItem>
@@ -130,13 +133,31 @@ export function ModelConfigList(props: {
             }
           />
         </ConfigItem>
-
         <ConfigItem title={Locale.Memory.Title} subTitle={Locale.Memory.Send}>
           <Checkbox
             checked={props.modelConfig.sendMemory}
             onCheckedChange={(checked) =>
               props.updateConfig(
                 (config) => (config.sendMemory = Boolean(checked)),
+              )
+            }
+          />
+        </ConfigItem>
+        <ConfigItem
+          title={Locale.Settings.MaxHistory.Title}
+          subTitle={Locale.Settings.MaxHistory.SubTitle}
+        >
+          <Input
+            type="number"
+            min={1}
+            max={100}
+            value={props.modelConfig.maxHistory}
+            onChange={(e) =>
+              props.updateConfig(
+                (config) =>
+                  (config.maxHistory = ModalConfigValidator.maxHistory(
+                    e.currentTarget.valueAsNumber,
+                  )),
               )
             }
           />

@@ -24,8 +24,8 @@ export default function BotList() {
     }
   };
 
-  const onClickCreate = () => {
-    const newBot = botStore.create();
+  const onClickCreate = async () => {
+    const newBot = await botStore.create();
     botStore.selectBot(newBot.id);
     setEditBotId(newBot.id);
   };

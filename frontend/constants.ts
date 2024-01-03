@@ -7,6 +7,8 @@ export enum Path {
     Bots = "/",
   }
 
+export const BASE_API_URL = process.env.NEXT_PUBLIC_CHAT_API
+
 export const GITHUB_URL = "";
 
 export enum FileName {

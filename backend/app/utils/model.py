@@ -3,7 +3,6 @@ from threading import Thread
 from typing import Any
 import logging
 import torch
-import gc
 from llama_index.llms.base import llm_completion_callback
 from app.utils.interface import _Bot, _availableModels, _LLMConfig
 from llama_index import ServiceContext
@@ -178,17 +177,13 @@ class CallbackHandler(BaseCallbackHandler):
 
 def create_service_context(bot: _Bot):
     config = bot.modelConfig
-    # delete llm variable if it exists to free memory
-    gc.collect()
-    torch.cuda.empty_cache()
-    torch.distributed.destroy_process_group()
 
     llm = OurLLM(bot.model_name.value, config.temperature, config.topP, config.maxTokens, device)
     service_context = ServiceContext.from_defaults(
         chunk_size=CHUNK_SIZE,
         embed_model="local:BAAI/bge-base-en-v1.5",
         llm=llm, 
-        callback_manager=CallbackManager([CallbackHandler([], [])]),
+        # callback_manager=CallbackManager([CallbackHandler([], [])]),
     )
     
     return service_context

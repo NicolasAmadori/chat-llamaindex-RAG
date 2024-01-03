@@ -1,7 +1,9 @@
-import { REQUEST_TIMEOUT_MS } from "../../../constants";
+import { REQUEST_TIMEOUT_MS, BASE_API_URL } from "../../../constants";
 
 import { fetchEventSource } from "@fortaine/fetch-event-source";
 import { Embedding } from "../fetch/url";
+
+import { Bot } from "../../store/bot"
 
 export const MESSAGE_ROLES = [
   "system",
@@ -30,15 +32,25 @@ export interface ResponseMessage {
   content: string;
 }
 
-export const ALL_MODELS = [
-  "gpt-4",
-  "gpt-4-1106-preview",
-  "gpt-4-vision-preview",
-  "gpt-3.5-turbo",
-  "gpt-3.5-turbo-16k",
-] as const;
+export let ALL_MODELS = []
+export let DEFAULT_MODEL = ""
 
-export type ModelType = (typeof ALL_MODELS)[number];
+const load_models = async () => {
+  const url = BASE_API_URL + "/bot/available_models"
+  const available_models = await fetch(url).then((res) => res.json());
+  const modelcards = available_models.map((x: any) => x.modelcard)
+
+  ALL_MODELS = modelcards
+  DEFAULT_MODEL = modelcards[0]
+} 
+
+const ALL_MODELS_PROMISE = (async () => {
+  await load_models()
+})()
+
+ALL_MODELS_PROMISE.then((models) => models)
+
+export type ModelType = typeof ALL_MODELS[number];
 
 export interface LLMConfig {
   model: ModelType;
@@ -46,6 +58,7 @@ export interface LLMConfig {
   topP?: number;
   sendMemory?: boolean;
   maxTokens?: number;
+  maxHistory?: number;
 }
 
 export interface ChatOptions {
@@ -67,7 +80,7 @@ export function isVisionModel(model: ModelType) {
 }
 
 export class LLMApi {
-  async chat(options: ChatOptions) {
+  static async chat(options: ChatOptions) {
     const requestPayload = {
       message: options.message,
       chatHistory: options.chatHistory.map((m) => ({
@@ -138,5 +151,44 @@ export class LLMApi {
     } catch (e) {
       handleError(e);
     }
+  }
+
+  static async create(bot: Bot) {
+    const url = BASE_API_URL + "/bot/"
+
+    const topP = bot.modelConfig.topP ? bot.modelConfig.topP : 1;
+
+    const body = JSON.stringify({
+      bot: {
+        bot_name: bot.name,
+        model_name: bot.modelName,
+        hide_context: bot.hideContext,
+        context: bot.context,
+        model_config: {
+          maxHistory: bot.modelConfig.maxHistory,
+          maxTokens: bot.modelConfig.maxTokens,
+          topP: bot.modelConfig.topP,
+          model_name: bot.modelConfig.model,
+          temperature: bot.modelConfig.temperature,
+          sendMemory: bot.modelConfig.sendMemory
+        },
+        bot_hello: bot.botHello,
+        data_source: "",
+      }
+    })
+
+    console.log(body)
+
+    try {
+      const response = await fetch(url, {
+        method: "POST", // or 'PUT'
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: body
+      });
+    } catch(error) {
+      console.error("Error in bot create: ", error);
+    } 
   }
 }

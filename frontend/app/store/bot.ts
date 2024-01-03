@@ -1,7 +1,7 @@
 import { nanoid } from "nanoid";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { LLMConfig } from "../client/platforms/llm";
+import { LLMConfig, LLMApi } from "../client/platforms/llm";
 import { ChatSession, ChatMessage, createEmptySession } from "./session";
 import { DEMO_BOTS, createDemoBots, createEmptyBot } from "@/app/bots/bot.data";
 
@@ -13,17 +13,18 @@ export type Share = {
 
 export type Bot = {
   id: string;
-  avatar: string;
-  name: string;
-  hideContext: boolean;
+  // avatar: string; // To Remove
+  name: string; // is bot name
+  modelName: string; // To configure
+  hideContext: boolean; 
   context: ChatMessage[];
   modelConfig: LLMConfig;
-  readOnly: boolean;
-  botHello: string | null;
+  // readOnly: boolean; // To Remove
+  botHello: string | null; 
   datasource?: string;
-  share?: Share;
+  // share?: Share; // To Remove
   createdAt?: number;
-  session: ChatSession;
+  // session: ChatSession; // To Remove
 };
 
 type BotState = {
@@ -35,18 +36,18 @@ type BotState = {
 type BotStore = BotState & {
   currentBot: () => Bot;
   selectBot: (id: string) => void;
-  currentSession: () => ChatSession;
+  currentSession: () => ChatMessage[];
   updateBotSession: (
-    updater: (session: ChatSession) => void,
+    updater: (session: ChatMessage[]) => void,
     botId: string,
   ) => void;
   get: (id: string) => Bot | undefined;
-  getByShareId: (shareId: string) => Bot | undefined;
+  // getByShareId: (shareId: string) => Bot | undefined;
   getAll: () => Bot[];
   create: (
     bot?: Partial<Bot>,
     options?: { readOnly?: boolean; reset?: boolean },
-  ) => Bot;
+  ) => Promise<Bot>;
   update: (id: string, updater: (bot: Bot) => void) => void;
   delete: (id: string) => void;
   restore: (state: BotState) => void;
@@ -60,7 +61,7 @@ export const useBotStore = create<BotStore>()(
   persist(
     (set, get) => ({
       bots: demoBots,
-      currentBotId: Object.values(demoBots)[0].id,
+      currentBotId: "-1",//Object.values(demoBots)[0].id,
 
       currentBot() {
         return get().bots[get().currentBotId];
@@ -69,11 +70,15 @@ export const useBotStore = create<BotStore>()(
         set(() => ({ currentBotId: id }));
       },
       currentSession() {
-        return get().currentBot().session;
+        if (get().currentBotId == "-1") {
+          return [];
+        }
+        return get().currentBot().context;
       },
       updateBotSession(updater, botId) {
         const bots = get().bots;
-        updater(bots[botId].session);
+        if (!bots[botId]) return;
+        updater(bots[botId].context);
         set(() => ({ bots }));
       },
       get(id) {
@@ -86,25 +91,23 @@ export const useBotStore = create<BotStore>()(
         }));
         return list.sort((a, b) => b.createdAt - a.createdAt);
       },
-      getByShareId(shareId) {
-        return get()
-          .getAll()
-          .find((b) => shareId === b.share?.id);
-      },
-      create(bot, options) {
+      // getByShareId(shareId) {
+      //   return get()
+      //     .getAll()
+      //     .find((b) => shareId === b.share?.id);
+      // },
+      async create(bot, options) {
         const bots = get().bots;
         const id = nanoid();
-        const session = createEmptySession();
+        const context = createEmptySession();
         bots[id] = {
           ...createEmptyBot(),
           ...bot,
           id,
-          session,
-          readOnly: options?.readOnly || false,
         };
-        if (options?.reset) {
-          bots[id].share = undefined;
-        }
+
+        await LLMApi.create(bots[id]);
+
         set(() => ({ bots }));
         return bots[id];
       },
@@ -161,7 +164,6 @@ export const useBotStore = create<BotStore>()(
             } else {
               // if not, store the new demo bot
               const bot: Bot = JSON.parse(JSON.stringify(demoBot));
-              bot.session = createEmptySession();
               state.bots[bot.id] = bot;
             }
           });
