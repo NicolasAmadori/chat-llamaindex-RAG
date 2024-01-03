@@ -24,8 +24,10 @@ import EditBotDialogContent from "./edit-bot-dialog";
 import ShareBotDialogContent from "./share-bot-dialog";
 
 export default function BotOptions() {
-  const { isReadOnly, isShareble, cloneBot } = useBot();
+  const { isReadOnly, isShareble, cloneBot, bot, updateBot } = useBot();
   const [dialogContent, setDialogContent] = useState<JSX.Element | null>(null);
+
+  //console.log(bot)
 
   return (
     <Dialog>
@@ -47,7 +49,8 @@ export default function BotOptions() {
             <DialogTrigger asChild>
               <DropdownMenuItem
                 disabled={isReadOnly}
-                onClick={() => setDialogContent(<EditBotDialogContent />)}
+                onClick={() => setDialogContent(<EditBotDialogContent/>)
+                }
               >
                 <ClipboardEdit className="mr-2 w-4 h-4" />
                 <span>{Locale.Bot.Item.Edit}</span>

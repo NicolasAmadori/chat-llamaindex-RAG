@@ -46,7 +46,8 @@ export const BotItemContextProvider = (props: {
   };
 
   const updateBot: Updater<Bot> = (updater) => {
-    botStore.update(bot.id, updater);
+    console.log("CIAOOO")
+    botStore.update(bot.id, bot.id, updater);
   };
 
   const isActive = botStore.currentBotId === props.bot.id;

@@ -4,6 +4,7 @@ from typing import Any
 from app.utils.model import *
 import json
 import gc
+import torch
 
 from llama_index.vector_stores import MilvusVectorStore
 from llama_index import (
@@ -14,6 +15,8 @@ from llama_index import (
     ServiceContext,
 )
 from llama_index.prompts import PromptTemplate
+
+from app.utils.model import create_service_context
 
 STORAGE_DIR = "./storage"  # directory to cache the generated index
 DATA_DIR = "./data"  # directory containing the documents to index
@@ -26,47 +29,51 @@ def initialize_vector_store():
     global vector_store
     vector_store = MilvusVectorStore(dim=768, overwrite=True)
 
-
-# one service context object for each bot_name
-# service_contexts = {}
+current_bot_id = None
+service_context = None
+    
 
 def get_index(bot): # TODO - decide if use the name or the index
     """
      Return a llamaindex index storage 
     """
-    gc.collect()
-    torch.cuda.empty_cache()
+    global current_bot_id
+    global service_context
+    global vector_store
+    
     logger = logging.getLogger("uvicorn")
-    # check if storag   e already exists
 
+    # If there is no current bot or the current bot is different from the bot passed as parameter
+    if current_bot_id is None or current_bot_id != bot.bot_id:
+        del service_context
+        gc.collect()
+        torch.cuda.empty_cache()
+        current_bot_id = bot.bot_id
+        service_context = create_service_context(bot)
 
-
-    # TO fix
-    service_context = create_service_context(bot)
-    if not os.path.exists(STORAGE_DIR+"/"+bot.bot_name):
+    if not os.path.exists(STORAGE_DIR+"/"+bot.bot_id):
         logger.info("Creating new index")
         
-        if not os.path.exists(DATA_DIR+"/"+bot.bot_name):
-            os.makedirs(DATA_DIR+"/"+bot.bot_name)
+        # if not os.path.exists(DATA_DIR+"/"+bot.bot_id):
+        #     os.makedirs(DATA_DIR+"/"+bot.bot_id)
         
-        try:
-            directory = SimpleDirectoryReader(DATA_DIR+"/"+bot.bot_name)
-            logger.info(f"Loading data from {DATA_DIR+'/'+bot.bot_name}...")
-            logger.info(f'[DIRECTORY]: {directory}')
-            documents = directory.load_data()
-            logger.info(f'[DOCUMENTS]: {documents}')
-        except ValueError:
-            logger.info(f"Empty data dir for bot {bot.bot_name}")
-            documents = set()
+        # if len(os.listdir(DATA_DIR+"/"+bot.bot_id)) == 0:
+        #     with open(DATA_DIR+"/"+bot.bot_id+"/conversation.txt", "w") as f:
+        #         f.write("")
+        directory = SimpleDirectoryReader(DATA_DIR+"/"+bot.bot_id)
+        logger.info(f"Loading data from {DATA_DIR+'/'+bot.bot_id}...")
+        logger.info(f'[DIRECTORY]: {directory}')
+        documents = directory.load_data()
+
         storage_context = StorageContext.from_defaults(vector_store=vector_store)
         index = VectorStoreIndex.from_documents(documents, storage_context=storage_context, service_context=service_context)
-        index.storage_context.persist(STORAGE_DIR+"/"+bot.bot_name)
-        logger.info(f"Finished creating new index. Stored in {STORAGE_DIR+'/'+bot.bot_name}")
+        index.storage_context.persist(STORAGE_DIR+"/"+bot.bot_id)
+        logger.info(f"Finished creating new index. Stored in {STORAGE_DIR+'/'+bot.bot_id}")
     else:
-        #service_context = service_contexts[bot.bot_name]
-        logger.info(f"Loading index from {STORAGE_DIR+'/'+bot.bot_name}...")
-        storage_context = StorageContext.from_defaults(vector_store=vector_store, persist_dir=STORAGE_DIR+"/"+bot.bot_name)
+        #service_context = service_contexts[bot.bot_id]
+        logger.info(f"Loading index from {STORAGE_DIR+'/'+bot.bot_id}...")
+        storage_context = StorageContext.from_defaults(vector_store=vector_store, persist_dir=STORAGE_DIR+"/"+bot.bot_id)
         index = load_index_from_storage(storage_context,service_context=service_context)
-        logger.info(f"Finished loading index from {STORAGE_DIR+'/'+bot.bot_name}")
+        logger.info(f"Finished loading index from {STORAGE_DIR+'/'+bot.bot_id}")
     return index
 

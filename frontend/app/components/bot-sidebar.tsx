@@ -31,7 +31,6 @@ export function BotSideBar(props: { className?: string }) {
           </div>
           <BotList />
         </div>
-
         <div className="flex items-center justify-between">
           <Button
             variant="secondary"

@@ -1,4 +1,4 @@
-import EditBotDialogContent from "@/app/components/bot/bot-options/edit-bot-dialog";
+import CreateBotDialogContent from "@/app/components/bot/bot-options/create-bot-dialog";
 import { BotItemContextProvider } from "@/app/components/bot/use-bot";
 import { Dialog, DialogTrigger } from "@/app/components/ui/dialog";
 import { PlusCircle } from "lucide-react";
@@ -25,9 +25,9 @@ export default function BotList() {
   };
 
   const onClickCreate = async () => {
-    const newBot = await botStore.create();
-    botStore.selectBot(newBot.id);
-    setEditBotId(newBot.id);
+     const newBot = await botStore.create();
+     botStore.selectBot(newBot.id);
+     setEditBotId(newBot.id);
   };
 
   const allBots = botStore.getAll();
@@ -42,13 +42,13 @@ export default function BotList() {
       <div className="space-y-2 mb-4">
         <Dialog>
           <DialogTrigger asChild>
-            <Button className="w-full" onClick={onClickCreate}>
+            <Button className="w-full" onClick = {onClickCreate}>
               <PlusCircle className="mr-2 h-4 w-4" /> {Locale.Bot.Page.Create}
             </Button>
           </DialogTrigger>
           {editBot && (
             <BotItemContextProvider bot={editBot}>
-              <EditBotDialogContent />
+              <CreateBotDialogContent/>
             </BotItemContextProvider>
           )}
         </Dialog>

@@ -20,7 +20,7 @@ class _Message(BaseModel):
 
 class _ChatData(BaseModel):
     messages: List[_Message]
-    bot_name: str
+    bot_id: str
 
 class _LLMConfig(BaseModel):
     model_name: _availableModels
@@ -31,7 +31,7 @@ class _LLMConfig(BaseModel):
     maxHistory: int
 
 class _Bot(BaseModel):
-    id: str
+    bot_id: str
     bot_name: str
     model_name: _availableModels
     tokenizer_name: str

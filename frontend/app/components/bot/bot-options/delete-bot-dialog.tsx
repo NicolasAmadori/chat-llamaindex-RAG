@@ -11,9 +11,21 @@ import {
 } from "../../ui/alert-dialog";
 import { useBot } from "../use-bot";
 import { buttonVariants } from "@/app/components/ui/button";
+import { LLMConfig, LLMApi } from "../../../client/platforms/llm";
+
 
 export default function DeleteBotDialogContent() {
-  const { deleteBot } = useBot();
+  const { deleteBot, bot } = useBot();
+
+  const deleteBotApi = async () => {
+    console.log(bot)
+    console.log(deleteBot)
+
+    await LLMApi.delete(bot.id);
+    deleteBot()
+  }
+
+
   return (
     <AlertDialogContent>
       <AlertDialogHeader>
@@ -26,7 +38,7 @@ export default function DeleteBotDialogContent() {
         <AlertDialogCancel>Cancel</AlertDialogCancel>
         <AlertDialogAction
           className={cn(buttonVariants({ variant: "destructive" }))}
-          onClick={deleteBot}
+          onClick={deleteBotApi}
         >
           Continue
         </AlertDialogAction>

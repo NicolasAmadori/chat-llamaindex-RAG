@@ -127,63 +127,15 @@ class OurLLM(CustomLLM):
                 yield CompletionResponse(text=accumulated_text, delta=text)
 
         """
- 
-class CallbackHandler(BaseCallbackHandler):
-    """Base callback handler that can be used to track event starts and ends."""
-
-    def on_event_start(
-        self,
-        event_type,
-        payload= None,
-        event_id: str = "",
-        **kwargs: Any,
-    ) -> str:
-        """Run when an event starts and return id of event."""
-        with open('log_event', 'w') as f:
-            f.write(f"event: {event_id}, EVENT TYPE: {event_type}, PAYLOAD: {payload} \n\n\n\n")
-
-        print("start", event_type)
-
-    def on_event_end(
-        self,
-        event_type,
-        payload= None,
-        event_id: str = "",
-        **kwargs: Any,
-    ) -> None:
-        """Run when an event ends."""
-        with open('log_event', 'w') as f:
-            f.write(f"event: {event_id}, EVENT TYPE: {event_type}, PAYLOAD: {payload}  \n\n\n\n")
-        print("end", event_type)
-
-    def start_trace(self, trace_id = None) -> None:
-        """Run when an overall trace is launched."""
-        with open('log_trace', 'w') as f:
-            f.write(f"trace: {trace_id}  \n")
-
-    def end_trace(
-        self,
-        trace_id=None,
-        trace_map= None,
-    ) -> None:
-        """Run when an overall trace is exited."""
-        import json
-
-        with open('log_trace_end', 'w') as f:
-            f.write(f"trace: {json.dumps(trace_map, indent=4)}  \n")
-
-        print('trace: ', json.dumps(trace_map, indent=4))
-
+        
 
 def create_service_context(bot: _Bot):
     config = bot.modelConfig
-
     llm = OurLLM(bot.model_name.value, config.temperature, config.topP, config.maxTokens, device)
     service_context = ServiceContext.from_defaults(
         chunk_size=CHUNK_SIZE,
         embed_model="local:BAAI/bge-base-en-v1.5",
-        llm=llm, 
-        # callback_manager=CallbackManager([CallbackHandler([], [])]),
+        llm=llm
     )
-    
+
     return service_context

@@ -4,6 +4,7 @@ import { fetchEventSource } from "@fortaine/fetch-event-source";
 import { Embedding } from "../fetch/url";
 
 import { Bot } from "../../store/bot"
+import { nanoid } from "nanoid";
 
 export const MESSAGE_ROLES = [
   "system",
@@ -154,12 +155,15 @@ export class LLMApi {
   }
 
   static async create(bot: Bot) {
+    console.log("API CREATE")
+
     const url = BASE_API_URL + "/bot/"
 
     const topP = bot.modelConfig.topP ? bot.modelConfig.topP : 1;
 
     const body = JSON.stringify({
       bot: {
+        bot_id: bot.id,
         bot_name: bot.name,
         model_name: bot.modelName,
         hide_context: bot.hideContext,
@@ -187,8 +191,50 @@ export class LLMApi {
         },
         body: body
       });
+
+      if (!response.ok){
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
     } catch(error) {
       console.error("Error in bot create: ", error);
+      throw error;
     } 
+  }
+
+  static async delete(bot_id: string) {
+    console.log("API DELETE")
+
+    const url = BASE_API_URL + "/bot/"
+    try {
+      const response = await fetch(url, {
+        method: "DELETE", // or 'PUT'
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          bot_id: bot_id,
+        })
+      });
+
+      if (!response.ok){
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+    } catch(error) {
+      console.error("Error in bot delete: ", error);
+      throw error;
+    } 
+  }
+
+  static async patch(old_id: string, bot: Bot) {
+    console.log("API PATCH")
+
+    console.log("old_id, ", old_id)
+    console.log("bot, ", bot)
+
+
+    await LLMApi.delete(old_id);
+    await LLMApi.create(bot);
   }
 }

@@ -48,7 +48,7 @@ type BotStore = BotState & {
     bot?: Partial<Bot>,
     options?: { readOnly?: boolean; reset?: boolean },
   ) => Promise<Bot>;
-  update: (id: string, updater: (bot: Bot) => void) => void;
+  update: (old_id: string,new_id:string, updater: (bot: Bot) => void) => void;
   delete: (id: string) => void;
   restore: (state: BotState) => void;
   backup: () => BotState;
@@ -106,24 +106,27 @@ export const useBotStore = create<BotStore>()(
           id,
         };
 
-        await LLMApi.create(bots[id]);
+        //await LLMApi.create(bots[id]);
 
         set(() => ({ bots }));
         return bots[id];
       },
-      update(id, updater) {
+      update(old_id, new_id, updater) {
         const bots = get().bots;
-        const bot = bots[id];
+        const bot = bots[old_id];
         if (!bot) return;
         const updateBot = { ...bot };
         updater(updateBot);
-        bots[id] = updateBot;
+        bots[new_id] = updateBot;
         set(() => ({ bots }));
+        if(old_id !== new_id){
+          this.delete(old_id)
+          console.log("Deleting")
+        }
       },
       delete(id) {
         const bots = JSON.parse(JSON.stringify(get().bots));
         delete bots[id];
-
         let nextId = get().currentBotId;
         if (nextId === id) {
           nextId = Object.keys(bots)[0];
