@@ -26,33 +26,26 @@ logger = logging.getLogger("uvicorn")
 
 chat_router = r = APIRouter()
 
-def create_engine(index: VectorStoreIndex, custom_chat_history: List[ChatMessage]):
-    custom_prompt = PromptTemplate(
-        """\
-    Given a conversation (between Human and Assistant) and a follow up message from Human, \
-    rewrite the message to be a standalone question that captures all relevant context \
-    from the conversation.
+memory = ChatMemoryBuffer.from_defaults(token_limit=5000)
 
-    <Chat History>
-    {chat_history}
-
-    <Follow Up Message>
-    {question}
-
-    <Standalone question>
+def create_engine(index: VectorStoreIndex):
+    custom_prompt = """
+        You are a chatbot, able to have normal interactions, as well as talk,
+        you should always answer using the context given and withput your prior knowledge.
     """
-    )
 
+    # query_engine = index.as_query_engine(
+    #     text_qa_template=custom_prompt,
+    # )
+    # chat_engine = CondenseQuestionChatEngine.from_defaults(
+    #     query_engine=query_engine,
+    #     chat_history=[],
+    #     verbose=True,
+    #     service_context=service_context,        
+    # )
 
-    query_engine = index.as_query_engine()
-    chat_engine = CondenseQuestionChatEngine.from_defaults(
-        query_engine=query_engine,
-        condense_question_prompt=custom_prompt,
-        chat_history=custom_chat_history,
-        verbose=True,
-        service_context=service_context,        
-    )
-    return index.as_chat_engine()
+    chat_engine = index.as_chat_engine(chat_mode='context', system_prompt=custom_prompt, memory=memory)
+    return chat_engine
 
 
 @r.post("")
@@ -90,7 +83,7 @@ async def chat(
         for m in data.messages
     ]
 
-    #memory = ChatMemoryBuffer.from_defaults(token_limit=1500)
+
 
     # ----------------------------------------------------------------------------------------------------------------------------
     # memory = ChatMemoryBuffer.from_defaults(token_limit=3900)
@@ -110,9 +103,9 @@ async def chat(
     # print(response)
     # ----------------------------------------------------------------------------------------------------------------------------
 
-    chat_engine = create_engine(index, messages)
-    response = chat_engine.chat(lastMessage.content) #, messages)
-    logger.info(f'Chat response: {response}')
+    chat_engine = create_engine(index)
+    #response = chat_engine.chat(lastMessage.content) #, messages)
+    # logger.info(f'Chat response: {response}')
 
     # ----------------------------------------------------------------------------------------------------------------------------
     # New propmpt
@@ -134,16 +127,20 @@ async def chat(
     
     # response = response.response
 
-    return Response(response.response, media_type="text/plain")
-    """
     # stream response
-    async def event_generator():    
-        for token in response.response_gen:
-            #print(token)
-            # If client closes connection, stop sending events
-            if await request.is_disconnected():
-                break
-            yield token
+    response = chat_engine.chat(lastMessage.content)
+    return Response(response.response, media_type="text/plain")
+"""
+
+    # stream response
+    async def event_generator():
+         for token in response.response_gen:
+             print(token)
+             # If client closes connection, stop sending events
+             if await request.is_disconnected():
+                 break
+             yield token
 
     return StreamingResponse(event_generator(), media_type="text/plain")
-    """
+"""
+

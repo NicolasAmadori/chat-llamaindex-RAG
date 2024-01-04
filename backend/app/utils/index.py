@@ -63,12 +63,12 @@ def get_index(bot): # TODO - decide if use the name or the index
         #     with open(DATA_DIR+"/"+bot.bot_id+"/conversation.txt", "w") as f:
         #         f.write("")
         directory = SimpleDirectoryReader(DATA_DIR+"/"+bot.bot_id)
-        logger.info(f"Loading data from {DATA_DIR+'/'+bot.bot_id}...")
+        # logger.info(f"Loading data from {DATA_DIR+'/'+bot.bot_id}...")
         # logger.info(f'[DIRECTORY]: {directory}')
         documents = directory.load_data()
-        logger.info(f"Finished loading data from {DATA_DIR+'/'+bot.bot_id}")
+        # logger.info(f"Finished loading data from {DATA_DIR+'/'+bot.bot_id}")
         storage_context = StorageContext.from_defaults(vector_store=vector_store)
-        logger.info(f"Created storage context")
+        # logger.info(f"Created storage context")
         index = VectorStoreIndex.from_documents(documents, storage_context=storage_context, service_context=service_context)
         logger.info(f"Created index")
         index.storage_context.persist(STORAGE_DIR+"/"+bot.bot_id)
@@ -79,5 +79,6 @@ def get_index(bot): # TODO - decide if use the name or the index
         storage_context = StorageContext.from_defaults(vector_store=vector_store, persist_dir=STORAGE_DIR+"/"+bot.bot_id)
         index = load_index_from_storage(storage_context,service_context=service_context)
         logger.info(f"Finished loading index from {STORAGE_DIR+'/'+bot.bot_id}")
+        
     return index
 

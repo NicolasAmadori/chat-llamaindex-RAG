@@ -31,7 +31,7 @@ RUN pip3 install --upgrade nvidia-ml-py3==7.352.0
 RUN pip3 install transformers
 RUN pip3 install llama-index
 RUN pip3 install --upgrade sentence-transformers==2.2.2
-RUN pip3 install --upgrade accelerate==0.14.0
+RUN pip3 install --upgrade accelerate==0.25.0
 RUN pip3 install --upgrade codecarbon==2.1.4
 RUN pip3 install --upgrade streamlit==1.14.0
 RUN pip3 install --upgrade wget==3.2

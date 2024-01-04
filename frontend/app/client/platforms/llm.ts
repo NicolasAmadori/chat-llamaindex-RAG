@@ -104,6 +104,7 @@ export class LLMApi {
     console.log("[Request] payload: ", requestPayload);
 
     const body = JSON.stringify(requestPayload)
+    
     let response = {}
 
     try{
@@ -119,8 +120,9 @@ export class LLMApi {
       console.error(error)
     }
 
-    console.log("Oltre la richiesta");
-
+    let result = ""
+    let llmResponse = "";
+    const decoder = new TextDecoder("utf-8");
     if (response.body) {
       const reader = response.body.getReader();
       let receivedLength = 0; // length of received data
@@ -135,6 +137,9 @@ export class LLMApi {
     
         chunks.push(value);
         receivedLength += value.length;
+        llmResponse += decoder.decode(value);
+
+        options.onUpdate(llmResponse);
         console.log(chunks)
       }
     
@@ -145,13 +150,15 @@ export class LLMApi {
         position += chunk.length;
       }
     
-      let result = new TextDecoder("utf-8").decode(chunksAll);
+      result = decoder.decode(chunksAll);
       // Now 'result' contains the complete response body as a string
       console.log(result);
     } else {
       console.log("No response body");
     }
-
+    options.onFinish({
+      role: "assistant",
+      content:llmResponse}  as ResponseMessage);    
   }
 
   static async create(bot: Bot) {
@@ -165,13 +172,13 @@ export class LLMApi {
       bot: {
         bot_id: bot.id,
         bot_name: bot.name,
-        model_name: bot.modelName,
+        model_name: bot.modelConfig.model,
         hide_context: bot.hideContext,
         context: bot.context,
         model_config: {
           maxHistory: bot.modelConfig.maxHistory,
           maxTokens: bot.modelConfig.maxTokens,
-          topP: bot.modelConfig.topP,
+          topP: topP,
           model_name: bot.modelConfig.model,
           temperature: bot.modelConfig.temperature,
           sendMemory: bot.modelConfig.sendMemory

@@ -203,11 +203,8 @@ export function Chat() {
     }, bot ? bot.id : "-1");
   };
   const stop = () => ChatControllerPool.stop(bot ? bot.id : "-1");
-  let isRunning = false
-  if (bot) {
-    isRunning = ChatControllerPool.isRunning(bot.id);
-  }
-  //ciao
+  let isRunning = ChatControllerPool.isRunning(bot ? bot.id : "-1");
+  
   return (
     <div className="flex flex-col relative h-full" key={bot ? bot.id : "-1"}>
       <ChatHeader />
@@ -339,13 +336,13 @@ export function Chat() {
       <Separator />
       <div className="relative w-full box-border flex-col pt-2.5 p-5 space-y-2">
         <div className="flex justify-between items-center">
-          <ChatAction
+          {/* <ChatAction
             text={Locale.Chat.InputActions.Clear}
             icon={<Eraser className="w-4 h-4" />}
             onClick={clearContext}
             showTitle
             buttonVariant="outline"
-          />
+          /> */}
           {isRunning && (
             <ChatAction
               onClick={stop}
