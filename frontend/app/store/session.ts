@@ -95,8 +95,12 @@ async function createUserMessage(
   urlDetail?: URLDetailContent,
 ): Promise<ChatMessage> {
   let userMessage: ChatMessage;
-  if (content) {
+
+  if (content && urlDetail) {
     userMessage = await createTextInputMessage(content, urlDetail);
+  } else if (content) {
+    userMessage = await createTextInputMessage(content);
+    
   } else if (urlDetail) {
     userMessage = await createFileInputMessage(urlDetail);
   } else {
@@ -115,7 +119,6 @@ export async function callSession(
   fileDetail?: URLDetailContent,
 ): Promise<void> {
   const modelConfig = bot.modelConfig;
-
   let userMessage: ChatMessage;
 
   try {
@@ -133,6 +136,7 @@ export async function callSession(
         message: error.message || "Invalid user message",
       }),
     });
+    
     // updating the session will trigger a re-render, so it will display the messages
     session.messages = session.messages.concat([userMessage, botMessage]);
     callbacks.onUpdateMessages(session.messages);
@@ -196,6 +200,7 @@ export async function callSession(
   const controller = new AbortController();
   ChatControllerPool.addController(bot.id, controller);
   await LLMApi.chat({
+    bot_id: bot.id,
     datasource: bot.datasource,
     embeddings,
     message: message,

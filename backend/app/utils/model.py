@@ -7,6 +7,9 @@ from llama_index.llms.base import llm_completion_callback
 from app.utils.interface import _Bot, _availableModels, _LLMConfig
 from llama_index import ServiceContext
 from llama_index.callbacks.base import CallbackManager, BaseCallbackHandler
+import dotenv
+
+dotenv.load_dotenv()
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 print(f"Using device: {device}")
@@ -17,6 +20,7 @@ from llama_index.llms import (
     CompletionResponse,
     CompletionResponseGen,
     LLMMetadata,
+    # OpenAI
 )
 
 CHUNK_SIZE = 512
@@ -85,8 +89,8 @@ class OurLLM(CustomLLM):
 
     @llm_completion_callback()
     def complete(self, prompt: str, **kwargs) -> CompletionResponse:
-        # with open('log', 'w') as f:
-        #     f.write('[complete] prompt: '+prompt+'\n')
+        with open('log_complete', 'w') as f:
+            f.write('[complete] prompt: '+prompt+'\n')
         inputs = self.tokenizer(prompt, return_tensors="pt", return_attention_mask=False).to(self.device)
         outputs = self.model.generate(**inputs, max_length=self.max_length, max_new_tokens=self.max_new_tokens)
         text = self.tokenizer.batch_decode(outputs)[0]

@@ -116,28 +116,27 @@ function BackupItems() {
     }
   };
 
-  return (
-    <Card className="mb-5">
-      <CardContent className="divide-y p-5">
-        <ConfigItem
-          title={Locale.Settings.Backup.Download.Title}
-          subTitle={Locale.Settings.Backup.Download.SutTitle}
-        >
-          <Button variant="outline" size="icon" onClick={backupBots}>
-            <HardDriveDownload className="w-5 h-5" />
-          </Button>
-        </ConfigItem>
-        <ConfigItem
-          title={Locale.Settings.Backup.Upload.Title}
-          subTitle={Locale.Settings.Backup.Upload.SutTitle}
-        >
-          <Button variant="outline" size="icon" onClick={restoreBots}>
-            <ArchiveRestore className="w-5 h-5" />
-          </Button>
-        </ConfigItem>
-      </CardContent>
-    </Card>
-  );
+  return (<></>);
+    // <Card className="mb-5">
+    //   <CardContent className="divide-y p-5">
+    //     <ConfigItem
+    //       title={Locale.Settings.Backup.Download.Title}
+    //       subTitle={Locale.Settings.Backup.Download.SutTitle}
+    //     >
+    //       <Button variant="outline" size="icon" onClick={backupBots}>
+    //         <HardDriveDownload className="w-5 h-5" />
+    //       </Button>
+    //     </ConfigItem>
+    //     <ConfigItem
+    //       title={Locale.Settings.Backup.Upload.Title}
+    //       subTitle={Locale.Settings.Backup.Upload.SutTitle}
+    //     >
+    //       <Button variant="outline" size="icon" onClick={restoreBots}>
+    //         <ArchiveRestore className="w-5 h-5" />
+    //       </Button>
+    //     </ConfigItem>
+    //   </CardContent>
+    // </Card>
 }
 
 export function Settings() {

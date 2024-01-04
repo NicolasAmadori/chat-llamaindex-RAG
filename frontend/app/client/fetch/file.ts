@@ -2,30 +2,35 @@ import { URLDetailContent } from "./url";
 import { FileWrap } from "../../utils/file";
 import {
   ALLOWED_IMAGE_EXTENSIONS,
+  BASE_API_URL,
   IMAGE_TYPES,
   ImageType,
 } from "../../../constants";
 
 export async function getDetailContentFromFile(
   file: FileWrap,
+  bot_id:string
 ): Promise<URLDetailContent> {
-  if (file.extension === "pdf") return await getPDFFileDetail(file);
+  if (file.extension === "pdf") return await getPDFFileDetail(file, bot_id);
   if (file.extension === "txt") return await getTextFileDetail(file);
   if (ALLOWED_IMAGE_EXTENSIONS.includes(file.extension))
     return await getImageFileDetail(file);
   throw new Error("Not supported file type");
 }
 
-async function getPDFFileDetail(file: FileWrap): Promise<URLDetailContent> {
+const url = BASE_API_URL + "/file"
+
+async function getPDFFileDetail(file: FileWrap, bot_id:string): Promise<URLDetailContent> {
   const fileDataUrl = await file.readData({ asURL: true });
   const pdfBase64 = fileDataUrl.split(",")[1];
 
-  const response = await fetch("/api/fetch", {
+  const response = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
+      bot_id: bot_id,
       pdf: pdfBase64,
       fileName: file.name,
     }),
@@ -37,7 +42,7 @@ async function getPDFFileDetail(file: FileWrap): Promise<URLDetailContent> {
 
 async function getTextFileDetail(file: FileWrap): Promise<URLDetailContent> {
   const textContent = await file.readData();
-  const response = await fetch("/api/fetch", {
+  const response = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

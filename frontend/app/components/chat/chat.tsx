@@ -72,8 +72,9 @@ export function Chat() {
 
   const deleteMessage = (msgId?: string) => {
     botStore.updateBotSession(
-      (session) =>
-        (session.messages = session.messages.filter((m) => m.id !== msgId)),
+      (session) => {
+        session.messages = session.messages.filter((m) => m.id !== msgId)
+      },
       bot.id,
     );
   };

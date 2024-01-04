@@ -9,7 +9,7 @@ export enum Path {
 
 export const BASE_API_URL = process.env.NEXT_PUBLIC_CHAT_API
 
-export const GITHUB_URL = "";
+export const GITHUB_URL = "https://github.com/StefanoColamonaco/chat-llamaindex-RAG";
 
 export enum FileName {
   Bots = "bots.json",

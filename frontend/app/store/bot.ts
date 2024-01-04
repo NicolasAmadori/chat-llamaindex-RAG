@@ -24,7 +24,7 @@ export type Bot = {
   datasource?: string;
   // share?: Share; // To Remove
   createdAt?: number;
-  // session: ChatSession; // To Remove
+  session: ChatSession; // To Remove
 };
 
 type BotState = {
@@ -36,9 +36,9 @@ type BotState = {
 type BotStore = BotState & {
   currentBot: () => Bot;
   selectBot: (id: string) => void;
-  currentSession: () => ChatMessage[];
+  currentSession: () => ChatSession;
   updateBotSession: (
-    updater: (session: ChatMessage[]) => void,
+    updater: (session: ChatSession) => void,
     botId: string,
   ) => void;
   get: (id: string) => Bot | undefined;
@@ -70,15 +70,17 @@ export const useBotStore = create<BotStore>()(
         set(() => ({ currentBotId: id }));
       },
       currentSession() {
+        let session = createEmptySession(); 
         if (get().currentBotId == "-1") {
-          return [];
+          return session;
         }
-        return get().currentBot().context;
+        session.messages = get().currentBot().context
+        return session;
       },
       updateBotSession(updater, botId) {
         const bots = get().bots;
         if (!bots[botId]) return;
-        updater(bots[botId].context);
+        updater(bots[botId].session);
         set(() => ({ bots }));
       },
       get(id) {
@@ -99,14 +101,12 @@ export const useBotStore = create<BotStore>()(
       async create(bot, options) {
         const bots = get().bots;
         const id = nanoid();
-        const context = createEmptySession();
         bots[id] = {
           ...createEmptyBot(),
           ...bot,
           id,
+          session: createEmptySession()
         };
-
-        //await LLMApi.create(bots[id]);
 
         set(() => ({ bots }));
         return bots[id];
@@ -129,7 +129,11 @@ export const useBotStore = create<BotStore>()(
         delete bots[id];
         let nextId = get().currentBotId;
         if (nextId === id) {
-          nextId = Object.keys(bots)[0];
+          if(Object.keys(bots).length > 0){
+            nextId = Object.keys(bots)[0];
+          }else{
+            nextId = "-1";
+          }
         }
         set(() => ({ bots, currentBotId: nextId }));
       },
@@ -144,9 +148,12 @@ export const useBotStore = create<BotStore>()(
         set(() => ({ bots: state.bots }));
       },
       clearAllData() {
+        for (const bot of Object.values(get().bots)) {
+          LLMApi.delete(bot.id);
+        }
         localStorage.clear();
         location.reload();
-      },
+      }
     }),
     {
       name: "bot-store",

@@ -6,6 +6,7 @@ import os
 import uvicorn
 from app.api.routers.chat import chat_router
 from app.api.routers.bot import bot_router
+from app.api.routers.file import file_router
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from milvus import default_server
@@ -37,6 +38,7 @@ if environment == "dev":
 
 app.include_router(chat_router, prefix="/api/chat")
 app.include_router(bot_router, prefix="/api/bot")
+app.include_router(file_router, prefix="/api/file")
 
 
 if __name__ == "__main__":

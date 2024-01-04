@@ -10,6 +10,12 @@ class _availableModels(Enum):
     mistral = "mistralai/Mistral-7B-Instruct-v0.1"
     llama = "meta-llama/Llama-2-7b"
     mixtral = "TheBloke/Llama-2-7b-Chat-GPTQ:gptq-4bit-64g-actorder_True"
+    # gpt = "openai-gpt"
+    flan_xxl = 'google/flan-t5-xxl'
+    tinyroberta = 'deepset/tinyroberta-squad2'
+    zephir = 'HuggingFaceH4/zephyr-7b-beta'
+    
+    
 
 class _Message(BaseModel):
     role: MessageRole

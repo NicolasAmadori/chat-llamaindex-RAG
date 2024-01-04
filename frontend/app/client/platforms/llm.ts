@@ -63,6 +63,7 @@ export interface LLMConfig {
 }
 
 export interface ChatOptions {
+  bot_id: string;
   message: MessageContent;
   chatHistory: RequestMessage[];
   config: LLMConfig;
@@ -74,7 +75,6 @@ export interface ChatOptions {
   onError?: (err: Error) => void;
 }
 
-const CHAT_PATH = "/api/llm";
 
 export function isVisionModel(model: ModelType) {
   return model === "gpt-4-vision-preview";
@@ -82,76 +82,76 @@ export function isVisionModel(model: ModelType) {
 
 export class LLMApi {
   static async chat(options: ChatOptions) {
+    console.log("OPTION,", options)
+
+    const url = BASE_API_URL + "/chat";
+
+
+    let messages = options.chatHistory.map((m) => ({
+      role: m.role,
+      content: m.content,
+    }))
+    messages.push({
+      role: "user",
+      content: options.message
+    })
+
     const requestPayload = {
-      message: options.message,
-      chatHistory: options.chatHistory.map((m) => ({
-        role: m.role,
-        content: m.content,
-      })),
-      config: options.config,
-      datasource: options.datasource,
-      embeddings: options.embeddings,
-    };
+      messages: messages,
+      bot_id: options.bot_id,
+    }
 
     console.log("[Request] payload: ", requestPayload);
 
-    const requestTimeoutId = setTimeout(
-      () => options.controller?.abort(),
-      REQUEST_TIMEOUT_MS,
-    );
+    const body = JSON.stringify(requestPayload)
+    let response = {}
 
-    options.controller.signal.onabort = () => options.onFinish();
-    const handleError = (e: any) => {
-      clearTimeout(requestTimeoutId);
-      console.log("[Request] failed to make a chat request", e);
-      options.onError?.(e as Error);
-    };
-
-    try {
-      const chatPayload = {
-        method: "POST",
-        body: JSON.stringify(requestPayload),
-        signal: options.controller?.signal,
+    try{
+      response = await fetch(url, {
+        method: "POST", // or 'PUT'
         headers: {
           "Content-Type": "application/json",
         },
-      };
-
-      let llmResponse = "";
-      await fetchEventSource(CHAT_PATH, {
-        ...chatPayload,
-        async onopen(res) {
-          clearTimeout(requestTimeoutId);
-          if (!res.ok) {
-            const json = await res.json();
-            handleError(new Error(json.message));
-          }
-        },
-        onmessage(msg) {
-          try {
-            const json = JSON.parse(msg.data);
-            if (json.done) {
-              options.onFinish(json.memoryMessage);
-            } else if (json.error) {
-              options.onError?.(new Error(json.error));
-            } else {
-              // received a new token
-              llmResponse += json;
-              options.onUpdate(llmResponse);
-            }
-          } catch (e) {
-            console.error("[Request] error parsing streaming delta", msg);
-          }
-        },
-        onclose() {
-          options.onFinish();
-        },
-        onerror: handleError,
-        openWhenHidden: true,
+        body: body
       });
-    } catch (e) {
-      handleError(e);
     }
+    catch(error){
+      console.error(error)
+    }
+
+    console.log("Oltre la richiesta");
+
+    if (response.body) {
+      const reader = response.body.getReader();
+      let receivedLength = 0; // length of received data
+      let chunks = []; // array to store received chunks
+      
+      while(true) {
+        const { done, value } = await reader.read();
+    
+        if (done) {
+          break;
+        }
+    
+        chunks.push(value);
+        receivedLength += value.length;
+        console.log(chunks)
+      }
+    
+      let chunksAll = new Uint8Array(receivedLength); // create a new array to store all chunks
+      let position = 0;
+      for(let chunk of chunks) {
+        chunksAll.set(chunk, position); // copy data from each chunk to the new array
+        position += chunk.length;
+      }
+    
+      let result = new TextDecoder("utf-8").decode(chunksAll);
+      // Now 'result' contains the complete response body as a string
+      console.log(result);
+    } else {
+      console.log("No response body");
+    }
+
   }
 
   static async create(bot: Bot) {
@@ -229,11 +229,6 @@ export class LLMApi {
 
   static async patch(old_id: string, bot: Bot) {
     console.log("API PATCH")
-
-    console.log("old_id, ", old_id)
-    console.log("bot, ", bot)
-
-
     await LLMApi.delete(old_id);
     await LLMApi.create(bot);
   }

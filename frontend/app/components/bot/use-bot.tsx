@@ -46,7 +46,6 @@ export const BotItemContextProvider = (props: {
   };
 
   const updateBot: Updater<Bot> = (updater) => {
-    console.log("CIAOOO")
     botStore.update(bot.id, bot.id, updater);
   };
 

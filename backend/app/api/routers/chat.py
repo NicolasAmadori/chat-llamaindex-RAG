@@ -9,8 +9,11 @@ from app.api.routers.bot import get_bot_by_id
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from llama_index import VectorStoreIndex
 from llama_index.llms import MessageRole, ChatMessage
-
+from llama_index.chat_engine.condense_question import (
+    CondenseQuestionChatEngine,
+)
 from app.utils.interface import _ChatData
+from app.utils.index import service_context
 
 from llama_index.memory import ChatMemoryBuffer
 
@@ -22,6 +25,34 @@ import logging
 logger = logging.getLogger("uvicorn")
 
 chat_router = r = APIRouter()
+
+def create_engine(index: VectorStoreIndex, custom_chat_history: List[ChatMessage]):
+    custom_prompt = PromptTemplate(
+        """\
+    Given a conversation (between Human and Assistant) and a follow up message from Human, \
+    rewrite the message to be a standalone question that captures all relevant context \
+    from the conversation.
+
+    <Chat History>
+    {chat_history}
+
+    <Follow Up Message>
+    {question}
+
+    <Standalone question>
+    """
+    )
+
+
+    query_engine = index.as_query_engine()
+    chat_engine = CondenseQuestionChatEngine.from_defaults(
+        query_engine=query_engine,
+        condense_question_prompt=custom_prompt,
+        chat_history=custom_chat_history,
+        verbose=True,
+        service_context=service_context,        
+    )
+    return index.as_chat_engine()
 
 
 @r.post("")
@@ -50,7 +81,7 @@ async def chat(
     # convert messages coming from the request to type ChatMessage
     bot = get_bot_by_id(data.bot_id)
     index = get_index(bot)
-    
+    # service_context = index.service_context
     messages = [
         ChatMessage(
             role=m.role,
@@ -61,22 +92,29 @@ async def chat(
 
     #memory = ChatMemoryBuffer.from_defaults(token_limit=1500)
 
-    memory = ChatMemoryBuffer.from_defaults(token_limit=3900)
-    chat_engine = index.as_chat_engine(
-        chat_mode="condense_plus_context",
-        memory=memory,
-        context_prompt=(
-            "You are a chatbot, able to have normal interactions, as well as talk"
-            # " about an essay discussing Paul Grahams life."
-            "Here are the relevant documents for the context:\n"
-            "{context_str}"
-            "\nInstruction: Use the previous chat history, or the context above, to interact and help the user."
-        ),
-        verbose=False,
-    )
+    # ----------------------------------------------------------------------------------------------------------------------------
+    # memory = ChatMemoryBuffer.from_defaults(token_limit=3900)
+    # chat_engine = index.as_chat_engine(
+    #     chat_mode="condense_plus_context",
+    #     memory=memory,
+    #     context_prompt=(
+    #         "You are a chatbot, able to have normal interactions, as well as talk"
+    #         # " about an essay discussing Paul Grahams life."
+    #         "Here are the relevant documents for the context:\n"
+    #         "{context_str}"
+    #         "\nInstruction: Use the previous chat history, or the context above, to interact and help the user."
+    #     ),
+    #     verbose=False,
+    # )
+    # response = chat_engine.chat(lastMessage.content, messages)
+    # print(response)
+    # ----------------------------------------------------------------------------------------------------------------------------
 
-    response = chat_engine.chat(lastMessage.content, messages)
+    chat_engine = create_engine(index, messages)
+    response = chat_engine.chat(lastMessage.content) #, messages)
+    logger.info(f'Chat response: {response}')
 
+    # ----------------------------------------------------------------------------------------------------------------------------
     # New propmpt
     # custom_prompt_str = (
     #    "Context information is below.\n"
@@ -94,9 +132,9 @@ async def chat(
     # )
     # response = query_engine.query(lastMessage.content, messages)
     
-    response = response.response
+    # response = response.response
 
-    return Response(response, media_type="text/plain")
+    return Response(response.response, media_type="text/plain")
     """
     # stream response
     async def event_generator():    

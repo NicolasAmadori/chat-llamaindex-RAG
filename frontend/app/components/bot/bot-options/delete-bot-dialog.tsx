@@ -18,9 +18,7 @@ export default function DeleteBotDialogContent() {
   const { deleteBot, bot } = useBot();
 
   const deleteBotApi = async () => {
-    console.log(bot)
-    console.log(deleteBot)
-
+    console.log("DELETING",bot)
     await LLMApi.delete(bot.id);
     deleteBot()
   }

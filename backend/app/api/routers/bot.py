@@ -66,7 +66,7 @@ async def create_bot(request: Request):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="No bot data provided",
         )
-
+        
     if bot['model_name'] not in [model.value for model in _availableModels]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

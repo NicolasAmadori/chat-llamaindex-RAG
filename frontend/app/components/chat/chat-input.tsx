@@ -133,14 +133,17 @@ export default function ChatInput(props: ChatInputProps) {
     });
   };
 
+
   const doSubmitFile = async (fileInput: FileWrap) => {
     try {
+      const bot_id = bot.id;
       await manageTemporaryBlobUrl(fileInput.file, async () => {
-        const fileDetail = await getDetailContentFromFile(fileInput);
+        const fileDetail = await getDetailContentFromFile(fileInput, bot_id);
         if (isImageFileType(fileInput.file.type)) {
           setImageFile(fileDetail);
         } else {
-          callLLM({ fileDetail });
+          console.log("FILE DETAIL", fileDetail)
+          //callLLM({ fileDetail });
         }
       });
     } catch (error) {

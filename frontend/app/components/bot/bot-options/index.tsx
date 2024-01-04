@@ -27,8 +27,6 @@ export default function BotOptions() {
   const { isReadOnly, isShareble, cloneBot, bot, updateBot } = useBot();
   const [dialogContent, setDialogContent] = useState<JSX.Element | null>(null);
 
-  //console.log(bot)
-
   return (
     <Dialog>
       <AlertDialog>
