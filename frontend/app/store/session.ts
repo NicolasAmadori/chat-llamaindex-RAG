@@ -145,7 +145,7 @@ export async function callSession(
 
   const botMessage: ChatMessage = createMessage({
     role: "assistant",
-    streaming: true,
+    streaming: false,
   });
 
   const contextPrompts = bot.context.slice();
@@ -159,6 +159,7 @@ export async function callSession(
   ];
 
   // save user's and bot's message
+
   session.messages = session.messages.concat([userMessage, botMessage]);
   callbacks.onUpdateMessages(session.messages);
 

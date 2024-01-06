@@ -139,8 +139,9 @@ export class LLMApi {
         receivedLength += value.length;
         llmResponse += decoder.decode(value);
 
+        console.log("llmResponse", llmResponse)
+
         options.onUpdate(llmResponse);
-        console.log(chunks)
       }
     
       let chunksAll = new Uint8Array(receivedLength); // create a new array to store all chunks
@@ -156,9 +157,7 @@ export class LLMApi {
     } else {
       console.log("No response body");
     }
-    options.onFinish({
-      role: "assistant",
-      content:llmResponse}  as ResponseMessage);    
+    options.onFinish();
   }
 
   static async create(bot: Bot) {

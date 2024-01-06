@@ -11,8 +11,7 @@ export default function ChatHeader() {
   const botStore = useBotStore();
   const bot = botStore.currentBot();
   const session = botStore.currentSession();
-  const numberOfMessages = 0;
-    //(bot.botHello?.length ? 1 : 0) + session.messages.length;
+  const numberOfMessages = (bot.botHello?.length ? 1 : 0) + session.messages.length;
   return (
     <div className="relative">
       <div className="absolute top-4 left-5">

@@ -1,19 +1,23 @@
 from fastapi.responses import StreamingResponse, Response
 from fastapi import APIRouter, Depends, HTTPException, Request, status, UploadFile, File
 import base64
+import os
 
 from app.api.routers.bot import DATA_DIR
 from app.utils.index import add_bot_to_refresh
 
 file_router = APIRouter()
 
-# TODO: complete the route to receive a file
 @file_router.post("")
 async def post_file(request: Request):
     try:
         data = await request.json()
         filename = data['filename']
         bot_id = data['bot_id']
+
+        if not os.path.exists(DATA_DIR+"/"+bot_id):
+            raise ("Bot does not exist")
+
         file = ""
         if filename.endswith(".pdf"):
             file_base64 = data['file']
@@ -25,9 +29,9 @@ async def post_file(request: Request):
             with open(DATA_DIR+"/"+bot_id+"/"+filename, "w") as fh:
                 fh.write(file)        
         add_bot_to_refresh(bot_id)
+        return {"ok": True}
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Wrong body format, error {e}",
         )
-    return {"ok": True}

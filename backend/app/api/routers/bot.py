@@ -17,16 +17,25 @@ from pydantic import BaseModel
 
 from app.utils.interface import _Bot, _Message, _availableModels, _LLMConfig
 
+import logging
+logger = logging.getLogger('uvicorn')
+
 bot_router = r = APIRouter()
 
 STORAGE_DIR = "./storage"  # directory to cache the generated index
 DATA_DIR = "./data"  # directory containing the documents to index
+BOT_STORE_FILE = './bot_store.json'
 BOT_PARAMS = ['bot_name', 'model_name', 'hide_context', 'context', 'model_config', 'bot_hello', 'data_source']
 
 bots_list: Dict[str, _Bot] = {}
 
 @r.on_event("startup")
 async def startup_event():
+    # Create bot store if file does not exist
+    if not os.path.exists(BOT_STORE_FILE):
+        with open(BOT_STORE_FILE, 'w') as f:
+            f.write("{}")
+
     # Clear the storage dir on startup
     if os.path.exists(STORAGE_DIR):
         print("Clearing storage dir")
@@ -34,12 +43,38 @@ async def startup_event():
 
     os.mkdir(STORAGE_DIR)
 
-    data_folder = "./data"
-    if os.path.exists(data_folder):
+    # TODO: for loop to create the bots from the bot_store file
+    # with open(BOT_STORE_FILE, 'r') as f:
+    #     bots = json.load(f)
+    #     for bot_id, bot in bots.items():
+    #         config = bot['modelConfig']
+    #         logger.info(f"Loading bot {bot_id} with config {config}")
+    #         model_config: _LLMConfig = _LLMConfig(**config)
+    #         logger.info(f'ALL GOOD')
+    #         params = {
+    #             'bot_id' : bot_id,
+    #             'bot_name' : bot['bot_name'],
+    #             'model_name' : bot['model_name'],
+    #             'tokenizer_name' : bot['model_name'], # check in the future
+    #             'hideContext': bot['hide_context'],
+    #             'context': bot['context'],
+    #             'modelConfig': model_config,
+    #             'botHello': bot['bot_hello'],
+    #             'dataSource': bot['data_source'],
+    #             'createdAt' : round(time()*1000)
+    #         }
+    #         bot = _Bot(**params)
+    #         bots_list[bot_id] = bot
+
+    #     logger.info(f"Loaded {len(bots_list)} bots")
+    #     logger.info(f"Bots: {bots_list}")
+
+    # not cleaning data dire since we want to keep the bots persistent
+    if os.path.exists(DATA_DIR):
        print("Clearing data dir")
-       shutil.rmtree(data_folder)
+       shutil.rmtree(DATA_DIR)
     
-    os.mkdir(data_folder)
+    os.mkdir(DATA_DIR)
 
 
 @r.get("")

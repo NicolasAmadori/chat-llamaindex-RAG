@@ -9,7 +9,7 @@ from llama_index import (
     SimpleDirectoryReader,
     StorageContext,
     VectorStoreIndex,
-    load_index_from_storage,
+    load_index_from_storage
 )
 
 from app.utils.model import create_service_context

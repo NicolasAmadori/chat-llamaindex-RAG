@@ -70,11 +70,12 @@ export const useBotStore = create<BotStore>()(
         set(() => ({ currentBotId: id }));
       },
       currentSession() {
+        //return get().currentBot().session;
         let session = createEmptySession(); 
         if (get().currentBotId == "-1") {
           return session;
         }
-        session.messages = get().currentBot().context
+        session = get().currentBot().session
         return session;
       },
       updateBotSession(updater, botId) {

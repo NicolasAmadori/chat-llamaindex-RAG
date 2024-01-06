@@ -84,9 +84,11 @@ export function Chat() {
   };
 
   const context: ChatMessage[] = []
-  // useMemo(() => {
-  //   return bot.hideContext ? [] : bot.context.slice();
-  // }, [bot.context, bot.hideContext]);
+  useMemo(() => {
+    if(bot){
+       return bot.hideContext ? [] : bot.context.slice();
+    }
+  }, bot ? [bot.context, bot.hideContext] : [[], true]);
 
   const getUrlTypePrefix = (type: string) => {
     if (type === "text/html") return "HTML";
@@ -97,19 +99,22 @@ export function Chat() {
 
   // preview messages
   const renderMessages = useMemo(() => {
+
+
+
+
     const getFrontendMessages = (messages: ChatMessage[]) => {
-      return []
-      // return messages.map((message) => {
-      //   if (!message.urlDetail || isImageFileType(message.urlDetail.type))
-      //     return message;
-      //   const urlTypePrefix = getUrlTypePrefix(message.urlDetail.type);
-      //   const sizeInKB = Math.round(message.urlDetail.size / 1024);
-      //   return {
-      //     ...message,
-      //     content: `${message.urlDetail.url}\n\`${urlTypePrefix} • ${sizeInKB} KB\``,
-      //   };
-      // });
-    };
+      return messages.map((message) => {
+        if (!message.urlDetail || isImageFileType(message.urlDetail.type))
+          return message;
+        const urlTypePrefix = getUrlTypePrefix(message.urlDetail.type);
+        const sizeInKB = Math.round(message.urlDetail.size / 1024);
+        return {
+          ...message,
+          content: `${message.urlDetail.url}\n\`${urlTypePrefix} • ${sizeInKB} KB\``,
+        };
+      });
+  };
 
     const getUrlPreviewMessage = () => {
       const lastMessage = undefined//session.messages[session.messages.length - 1];
