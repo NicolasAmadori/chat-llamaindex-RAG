@@ -348,7 +348,7 @@ export function Chat() {
             showTitle
             buttonVariant="outline"
           /> */}
-          {isRunning && (
+          {false && isRunning && (
             <ChatAction
               onClick={stop}
               text={Locale.Chat.InputActions.Stop}

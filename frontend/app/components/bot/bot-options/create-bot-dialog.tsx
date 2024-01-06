@@ -1,5 +1,5 @@
 import Locale from "../../../locales";
-import { DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../../ui/dialog";
+import { DialogContent, DialogContentForCreate, DialogHeader, DialogTitle, DialogTrigger } from "../../ui/dialog";
 import { ScrollArea } from "../../ui/scroll-area";
 import { Separator } from "../../ui/separator";
 import { Button } from "../../ui/button"
@@ -26,7 +26,7 @@ export default function CreateBotDialogContent() {
   }
 
   return (
-    <DialogContent className="max-w-4xl">
+    <DialogContentForCreate className="max-w-4xl">
       <DialogHeader>
         <DialogTitle>Create a new bot</DialogTitle>
       </DialogHeader>
@@ -37,6 +37,6 @@ export default function CreateBotDialogContent() {
       <DialogTrigger asChild>
         <Button onClick = { onSubmitClick }>Submit</Button>
       </DialogTrigger>
-    </DialogContent>
+    </DialogContentForCreate>
   );
 }

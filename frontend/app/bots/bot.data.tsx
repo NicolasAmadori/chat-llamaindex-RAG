@@ -50,13 +50,14 @@ export const createEmptyBot = (): Bot => ({
   context: [],
   modelConfig: {
     model: DEFAULT_MODEL as ModelType,
-    temperature: 0.5,
+    temperature: 0.7,
     topP: 1,
-    maxTokens: 4096,
+    maxTokens: 2048,
     sendMemory: true,
-    maxHistory: 4096
+    maxHistory: 2048
   },
   createdAt: Date.now(),
   botHello: Locale.Store.BotHello,
   hideContext: false,
+  session: createEmptySession()
 });
