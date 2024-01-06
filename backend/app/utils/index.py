@@ -1,8 +1,6 @@
 import logging
 import os
-from typing import Any
 from app.utils.model import *
-import json
 import gc
 import torch
 
@@ -12,9 +10,7 @@ from llama_index import (
     StorageContext,
     VectorStoreIndex,
     load_index_from_storage,
-    ServiceContext,
 )
-from llama_index.prompts import PromptTemplate
 
 from app.utils.model import create_service_context
 
@@ -24,7 +20,7 @@ DATA_DIR = "./data"  # directory containing the documents to index
 if not os.path.exists(STORAGE_DIR):
     os.makedirs(STORAGE_DIR)
 
-vector_store = None # MilvusVectorStore(dim=768, overwrite=True)
+vector_store = None
 
 def initialize_vector_store():
     global vector_store
@@ -32,6 +28,7 @@ def initialize_vector_store():
 
 current_bot_id = None
 service_context = None
+bots_to_refresh = []
     
 
 def get_index(bot): # TODO - decide if use the name or the index
@@ -53,22 +50,18 @@ def get_index(bot): # TODO - decide if use the name or the index
         current_bot_id = bot.bot_id
         service_context = create_service_context(bot)
 
-    if not os.path.exists(STORAGE_DIR+"/"+bot.bot_id):
-        logger.info("Creating new index")
+    if not os.path.exists(STORAGE_DIR+"/"+bot.bot_id) or bot.bot_id in bots_to_refresh:
         
-        # if not os.path.exists(DATA_DIR+"/"+bot.bot_id):
-        #     os.makedirs(DATA_DIR+"/"+bot.bot_id)
-        
-        # if len(os.listdir(DATA_DIR+"/"+bot.bot_id)) == 0:
-        #     with open(DATA_DIR+"/"+bot.bot_id+"/conversation.txt", "w") as f:
-        #         f.write("")
+        if bot.bot_id in bots_to_refresh:
+            logger.info(f"Refreshing index for bot {bot.bot_id}")
+            # To remove all the occurences in case the bot is in the list more than once
+            bots_to_refresh[:] = [bot_id for bot_id in bots_to_refresh if bot_id != bot.bot_id]
+        else:
+            logger.info("Creating new index")
+
         directory = SimpleDirectoryReader(DATA_DIR+"/"+bot.bot_id)
-        # logger.info(f"Loading data from {DATA_DIR+'/'+bot.bot_id}...")
-        # logger.info(f'[DIRECTORY]: {directory}')
         documents = directory.load_data()
-        # logger.info(f"Finished loading data from {DATA_DIR+'/'+bot.bot_id}")
         storage_context = StorageContext.from_defaults(vector_store=vector_store)
-        # logger.info(f"Created storage context")
         index = VectorStoreIndex.from_documents(documents, storage_context=storage_context, service_context=service_context)
         logger.info(f"Created index")
         index.storage_context.persist(STORAGE_DIR+"/"+bot.bot_id)
@@ -77,8 +70,13 @@ def get_index(bot): # TODO - decide if use the name or the index
         #service_context = service_contexts[bot.bot_id]
         logger.info(f"Loading index from {STORAGE_DIR+'/'+bot.bot_id}...")
         storage_context = StorageContext.from_defaults(vector_store=vector_store, persist_dir=STORAGE_DIR+"/"+bot.bot_id)
-        index = load_index_from_storage(storage_context,service_context=service_context)
+        index = load_index_from_storage(storage_context, service_context=service_context)
         logger.info(f"Finished loading index from {STORAGE_DIR+'/'+bot.bot_id}")
         
     return index
 
+def add_bot_to_refresh(bot_id: str):
+    """
+    Add a bot to the list of bots to refresh
+    """
+    bots_to_refresh.append(bot_id)

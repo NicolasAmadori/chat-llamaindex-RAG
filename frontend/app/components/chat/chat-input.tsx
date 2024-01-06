@@ -124,7 +124,7 @@ export default function ChatInput(props: ChatInputProps) {
       tempUrl = URL.createObjectURL(file);
       setTemporaryBlobUrl(tempUrl);
     }
-
+    console.log("ACTION", action)
     return action().finally(() => {
       if (isImageFileType(file.type)) {
         URL.revokeObjectURL(tempUrl);
@@ -138,15 +138,14 @@ export default function ChatInput(props: ChatInputProps) {
     try {
       const bot_id = bot.id;
       await manageTemporaryBlobUrl(fileInput.file, async () => {
-        const fileDetail = await getDetailContentFromFile(fileInput, bot_id);
         if (isImageFileType(fileInput.file.type)) {
-          setImageFile(fileDetail);
+          throw new Error("No images allowed");
         } else {
-          console.log("FILE DETAIL", fileDetail)
-          //callLLM({ fileDetail });
+          const fileDetail = await getDetailContentFromFile(fileInput, bot_id);
         }
       });
     } catch (error) {
+      console.log("ERROR", error)
       showError(Locale.Upload.Failed((error as Error).message));
     }
   };

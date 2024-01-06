@@ -113,6 +113,7 @@ async def create_bot(request: Request):
     if not os.path.exists(DATA_DIR+"/"+bot_id):
         os.makedirs(DATA_DIR+"/"+bot_id)
 
+    # Store a file with the context of the bot
     with open(f'{DATA_DIR}/{bot_id}/empty.txt', 'w') as f:
         f.write("")
         for message in bot.context:
