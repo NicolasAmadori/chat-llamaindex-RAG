@@ -1,7 +1,7 @@
 from pydantic import BaseModel
-from typing import List, Any
+from typing import List
 from enum import Enum
-from llama_index.llms import MessageRole, ChatMessage
+from llama_index.llms import MessageRole
 from time import time
 
 class _availableModels(Enum):

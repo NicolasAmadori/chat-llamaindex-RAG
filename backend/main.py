@@ -10,17 +10,11 @@ from app.api.routers.file import file_router
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from milvus import default_server
-from pymilvus import (
-    connections,
-    utility,
-    FieldSchema,
-    CollectionSchema,
-    DataType,
-    Collection,
-)
+from pymilvus import connections
 from app.utils.index import initialize_vector_store
 
 app = FastAPI()
+
 
 environment = os.getenv("ENVIRONMENT", "dev")  # Default to 'development' if not set
 

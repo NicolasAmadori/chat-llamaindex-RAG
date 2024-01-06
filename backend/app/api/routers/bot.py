@@ -1,29 +1,22 @@
-from typing import List, Any, Dict
+from typing import Dict
 import os
 import shutil
-import psutil
 import json
 
-import random
 from time import time
-from fastapi.responses import StreamingResponse
 
-from app.utils.json import json_to_model
-from app.utils.index import get_index
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-from llama_index import VectorStoreIndex
-from llama_index.llms import MessageRole, ChatMessage
-from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException, Request, status
 
-from app.utils.interface import _Bot, _Message, _availableModels, _LLMConfig
+from app.utils.interface import _Bot, _availableModels, _LLMConfig
+from app.utils.model import store_bot, remove_bot_from_store
 
 import logging
 logger = logging.getLogger('uvicorn')
 
 bot_router = r = APIRouter()
 
-STORAGE_DIR = "./storage"  # directory to cache the generated index
-DATA_DIR = "./data"  # directory containing the documents to index
+STORAGE_DIR = "./storage"
+DATA_DIR = "./data"
 BOT_STORE_FILE = './bot_store.json'
 BOT_PARAMS = ['bot_name', 'model_name', 'hide_context', 'context', 'model_config', 'bot_hello', 'data_source']
 
@@ -31,6 +24,21 @@ bots_list: Dict[str, _Bot] = {}
 
 @r.on_event("startup")
 async def startup_event():
+    # Create bot store file if it does not exist
+    if not os.path.exists(BOT_STORE_FILE):
+        print("Creating bot store")
+        with open(BOT_STORE_FILE, 'w') as f:
+            f.write("{}")
+    else:
+        # Check if the bot store file is corrupted
+        try:
+            with open(BOT_STORE_FILE, 'r') as f:
+                _ = json.load(f)
+        except Exception as e:
+            print("Bot store file corrupted, creating new one")
+            with open(BOT_STORE_FILE, 'w') as f:
+                f.write("{}")
+
     # Create bot store if file does not exist
     if not os.path.exists(BOT_STORE_FILE):
         with open(BOT_STORE_FILE, 'w') as f:
@@ -44,37 +52,37 @@ async def startup_event():
     os.mkdir(STORAGE_DIR)
 
     # TODO: for loop to create the bots from the bot_store file
-    # with open(BOT_STORE_FILE, 'r') as f:
-    #     bots = json.load(f)
-    #     for bot_id, bot in bots.items():
-    #         config = bot['modelConfig']
-    #         logger.info(f"Loading bot {bot_id} with config {config}")
-    #         model_config: _LLMConfig = _LLMConfig(**config)
-    #         logger.info(f'ALL GOOD')
-    #         params = {
-    #             'bot_id' : bot_id,
-    #             'bot_name' : bot['bot_name'],
-    #             'model_name' : bot['model_name'],
-    #             'tokenizer_name' : bot['model_name'], # check in the future
-    #             'hideContext': bot['hide_context'],
-    #             'context': bot['context'],
-    #             'modelConfig': model_config,
-    #             'botHello': bot['bot_hello'],
-    #             'dataSource': bot['data_source'],
-    #             'createdAt' : round(time()*1000)
-    #         }
-    #         bot = _Bot(**params)
-    #         bots_list[bot_id] = bot
-
-    #     logger.info(f"Loaded {len(bots_list)} bots")
-    #     logger.info(f"Bots: {bots_list}")
-
-    # not cleaning data dire since we want to keep the bots persistent
-    if os.path.exists(DATA_DIR):
-       print("Clearing data dir")
-       shutil.rmtree(DATA_DIR)
+    with open(BOT_STORE_FILE, 'r') as f:
+        bots = json.load(f)
+        for bot_id, bot in bots.items():
+            config = bot['modelConfig']
+            model_config: _LLMConfig = _LLMConfig(**config)
+            params = {
+                'bot_id' : bot_id,
+                'bot_name' : bot['bot_name'],
+                'model_name' : bot['model_name'],
+                'tokenizer_name' : bot['model_name'], # check in the future
+                'hideContext': bot['hideContext'],
+                'context': bot['context'],
+                'modelConfig': model_config,
+                'botHello': bot['botHello'],
+                'dataSource': bot['dataSource'],
+                'createdAt' : round(time()*1000)
+            }
+            logger.info(f'bot context: {bot["context"][:2]}')
+            bot = _Bot(**params)
+            bots_list[bot_id] = bot
     
-    os.mkdir(DATA_DIR)
+    available_bosts_ids = list(bots_list.keys())
+    if not os.path.exists(DATA_DIR):
+        print("Creating data dir")
+        os.mkdir(DATA_DIR)
+    
+    # scan of data dir to check if there are bots that are not in the bot store
+    for bot_id in os.listdir(DATA_DIR):
+        if bot_id not in available_bosts_ids:
+            print(f"Found bot {bot_id} not in bot store, deleting")
+            shutil.rmtree(DATA_DIR+"/"+bot_id)
 
 
 @r.get("")
@@ -95,7 +103,7 @@ async def create_bot(request: Request):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Wrong body format, error {e}",
         )
-    # if bot is None or None in [bot['bot_name'], bot['model_name'], bot['hide_context'], bot['context'], bot['model_config'], bot['bot_hello'], bot['data_source']]:
+
     if bot is None or (set(BOT_PARAMS) & set(bot.keys()) != set(BOT_PARAMS)): 
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -129,7 +137,7 @@ async def create_bot(request: Request):
         'bot_id' : bot_id,
         'bot_name' : bot['bot_name'],
         'model_name' : bot['model_name'],
-        'tokenizer_name' : bot['model_name'], # check in the future
+        'tokenizer_name' : bot['model_name'],
         'hideContext': bot['hide_context'],
         'context': bot['context'],
         'modelConfig': model_config,
@@ -138,11 +146,10 @@ async def create_bot(request: Request):
         'createdAt' : round(time()*1000)
     }
     
-    
-
     bot = _Bot(**params)
 
     bots_list[bot_id] = bot
+    store_bot(bot)
 
     # Create the data folder for the bot
     if not os.path.exists(DATA_DIR+"/"+bot_id):
@@ -154,8 +161,6 @@ async def create_bot(request: Request):
         for message in bot.context:
             f.write(str(message)+'\n')
     
-    #index = get_index(bot)
-
     return {"message": "Bot created", "bot": bot}
 
 @r.delete("")
@@ -177,10 +182,12 @@ async def delete_bot(request: Request):
 
     try:
         del bots_list[bot_id]
+        remove_bot_from_store(bot_id)
         
         if os.path.exists(STORAGE_DIR+"/"+bot_id):
             shutil.rmtree(STORAGE_DIR+"/"+bot_id)
-
+        if os.path.exists(DATA_DIR+"/"+bot_id):
+            shutil.rmtree(DATA_DIR+"/"+bot_id)
         return {"message": "Bot deleted"}
     except Exception as e:
         raise HTTPException(
