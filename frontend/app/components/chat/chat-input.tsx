@@ -151,6 +151,7 @@ export default function ChatInput(props: ChatInputProps) {
   };
 
   const doSubmit = async (input: string) => {
+    console.log(botStore.currentBotId)
     if (input.trim() === "") return;
     if (isURL(input)) {
       setTemporaryURLInput(input);
@@ -200,6 +201,8 @@ export default function ChatInput(props: ChatInputProps) {
   };
 
   return (
+    <div>
+    { botStore.currentBotId !== "-1" &&
     <div className="flex flex-1 items-end relative">
       {previewImage && (
         <div className="absolute top-[12px] left-[12px] w-[50px] h-[50px] rounded-xl cursor-pointer">
@@ -236,7 +239,7 @@ export default function ChatInput(props: ChatInputProps) {
             allowedExtensions: ALLOWED_DOCUMENT_EXTENSIONS,
             checkExtension,
             fileSizeLimit: DOCUMENT_FILE_SIZE_LIMIT,
-            disabled: isRunning || isUploadingImage,
+            disabled: (botStore.currentBotId == "-1") && (isRunning || isUploadingImage),
           }}
           onUpload={doSubmitFile}
           onError={showError}
@@ -244,21 +247,23 @@ export default function ChatInput(props: ChatInputProps) {
         {false ? (
           <Button
             size="icon"
-            onClick={() => doSubmit(userInput)}
-            disabled={isRunning || isUploadingImage}
+            onClick={() =>  doSubmit(userInput)}
+            disabled={(botStore.currentBotId == "-1") && (isRunning || isUploadingImage)}
           >
             <Send className="h-4 w-4" />
           </Button>
         ) : (
           <Button
             onClick={() => doSubmit(userInput)}
-            disabled={isRunning || isUploadingImage}
+            disabled={(botStore.currentBotId == "-1") && (isRunning || isUploadingImage)}
           >
             <Send className="h-4 w-4 mr-2" />
             {Locale.Chat.Send}
           </Button>
         )}
       </div>
+    </div>
+    }
     </div>
   );
 }
