@@ -5,16 +5,12 @@ from llama_index.llms import MessageRole
 from time import time
 
 class _availableModels(Enum):
-    phi_1_5 = "microsoft/phi-1_5"
-    phi_2 = "microsoft/phi-2"
+    cerbero_chat = "galatolo/cerbero-7b"
     mistral = "mistralai/Mistral-7B-Instruct-v0.1"
-    llama = "meta-llama/Llama-2-7b"
-    mixtral = "TheBloke/Llama-2-7b-Chat-GPTQ:gptq-4bit-64g-actorder_True"
-    # gpt = "openai-gpt"
-    flan_xxl = 'google/flan-t5-xxl'
-    tinyroberta = 'deepset/tinyroberta-squad2'
     zephir = 'HuggingFaceH4/zephyr-7b-beta'
-    
+    tinyllama = 'TinyLlama/TinyLlama-1.1B-Chat-v1.0'
+    dolphin = 'cognitivecomputations/dolphin-2.6-mistral-7b-dpo'
+    llama = 'meta-llama/Llama-2-7b-chat-hf'
     
 
 class _Message(BaseModel):

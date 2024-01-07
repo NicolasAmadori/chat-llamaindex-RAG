@@ -145,7 +145,7 @@ export async function callSession(
 
   const botMessage: ChatMessage = createMessage({
     role: "assistant",
-    streaming: false,
+    streaming: true,
   });
 
   const contextPrompts = bot.context.slice();

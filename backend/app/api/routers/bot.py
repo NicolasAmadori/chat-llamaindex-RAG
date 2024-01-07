@@ -85,6 +85,7 @@ async def startup_event():
             shutil.rmtree(DATA_DIR+"/"+bot_id)
 
 
+
 @r.get("")
 async def bots():
     return [{'id':bot.bot_id,'name': bot.bot_name, 'model':bot.model_name, "config": bot.modelConfig} for bot in bots_list.values()]

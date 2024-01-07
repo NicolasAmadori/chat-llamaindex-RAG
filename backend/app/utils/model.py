@@ -1,7 +1,7 @@
 import logging
 import torch
 from app.utils.interface import _Bot, _LLMConfig, _Message
-from app.utils.prompt import get_wrapper_prompt
+from app.utils.config import get_wrapper_prompt, get_quantization_config
 from llama_index import ServiceContext
 import dotenv
 from llama_index.llms import HuggingFaceLLM, MessageRole
@@ -18,6 +18,27 @@ logger = logging.getLogger("uvicorn")
 
 CHUNK_SIZE = 512
 BOT_STORE_FILE = "./bot_store.json"
+
+
+
+def messages_to_prompt_lama(messages):
+	prompt = ""
+	system_flag = False
+	for message in messages:
+		if message.role == 'system':
+			prompt += f"<s>[INST] <<SYS>>\n{message.content}\n<</SYS>>\n\n"
+			system_flag = True
+		elif message.role == 'user':
+			if not system_flag:
+				system_flag = False
+				prompt += f"<s>[INST] {message.content} [/INST]"
+			else:
+				prompt += f"{message.content} [/INST]"
+		elif message.role == 'assistant':
+			prompt += f" {message.content}</s>"
+	return prompt
+
+
 
 def messages_to_prompt(messages):
 	prompt = ""
@@ -38,19 +59,74 @@ def messages_to_prompt(messages):
 
 	return prompt
 
+def messages_to_prompt_ita(messages):
+	prompt = ""
+	for message in messages:
+		if message.role == 'system':
+			prompt += f"[|Sistema| {message.content}\n"
+		if message.role == 'user':
+			prompt += f"[|Umano|] {message.content}\n"
+		elif message.role == 'assistant':
+			prompt += f"[|Assistente|] {message.content}\n"
+
+	# # add final assistant prompt
+	# if not prompt.startswith("<|Sistema|>\n"):
+	# 	prompt = "<|Sistema|>\n</s>\n" + prompt
+
+	# prompt = prompt + "[|Assistente|]"
+
+	return prompt
+
+#messages_to_prompt=messages_to_prompt_ita,
+
+messages_template = [
+	{
+		"role": "user",
+		"content": "Domanda",
+	},
+	{
+		"role": "assistant",
+		"content": "Risposta",
+	},
+	{
+		"role": "user",
+		"content": "Domanda",
+	},
+	{
+		"role": "assistant",
+		"content": "Risposta",
+	}
+]
+
+
 def create_HFLLM(bot: _Bot):
 	config: _LLMConfig = bot.modelConfig
 	wrapper_prompt = get_wrapper_prompt(bot.model_name.value)
+	quantization_config = get_quantization_config(bot.model_name.value)
+
+	if bot.model_name.value == "galatolo/cerbero-7b":
+		jinja_string = """ {% if message['role'] == 'user' %}[|Umano|] {{ message['content'] }} \n{% else %} [|Assistente|] {{ message['content'] }} \n{% endif %}"""
+		t_kwargs = {"torch_dtype": "auto", "chat_template": jinja_string, "skip_special_tokens": True}
+		m_kwargs = {"do_sample":True,"revision":"float16","torch_dtype": "auto", "quantization_config": quantization_config, "trust_remote_code": True}
+		mtp = messages_to_prompt_ita
+	else:
+		t_kwargs = {"torch_dtype": "auto"}
+		m_kwargs= {"trust_remote_code": True, "torch_dtype": "auto"}
+		mtp = messages_to_prompt
+	if bot.model_name.value == "meta-llama/Llama-2-7b-chat-hf":
+		print("LLama2")
+		mtp = messages_to_prompt_lama
+
 	llm = HuggingFaceLLM(
 			model_name=bot.model_name.value,
 			tokenizer_name=bot.tokenizer_name,
 			query_wrapper_prompt=PromptTemplate(wrapper_prompt),
 			context_window=config.maxHistory,
 			max_new_tokens=config.maxTokens,
-			tokenizer_kwargs={"torch_dtype": "auto"},
-			model_kwargs={"torch_dtype": "auto", "trust_remote_code": True},
+			tokenizer_kwargs=t_kwargs,
+			model_kwargs=m_kwargs,
 			generate_kwargs={"temperature": config.temperature, "top_k": 50, "top_p": config.topP},
-			messages_to_prompt=messages_to_prompt,
+			messages_to_prompt=mtp,
 			device_map=device,
 	)
 	return llm

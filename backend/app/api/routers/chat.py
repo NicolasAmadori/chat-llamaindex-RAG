@@ -15,20 +15,21 @@ from typing import Any
 
 import logging
 
+DATA_DIR = "./data"  # directory containing the documents to index
+
 logger = logging.getLogger("uvicorn")
 
 chat_router = r = APIRouter()
 
-memory = ChatMemoryBuffer.from_defaults(token_limit=50000)
-
 def create_engine(index: VectorStoreIndex):
+    memory = ChatMemoryBuffer.from_defaults(token_limit=50000)
+    
     custom_prompt = """
-        You are a chatbot, able to have normal interactions, as well as talk,
-        you should always answer using the context given and withput your prior knowledge.
+        You are a chatbot, able to have normal interactions, as well as talk. You should also keep trace of all the information provided by the user, and use it to answer the questions.
     """
 
-    chat_engine = index.as_chat_engine(chat_mode='context', system_prompt=custom_prompt, memory=memory)
-    return chat_engine\
+    chat_engine = index.as_chat_engine(chat_mode='context', system_prompt=custom_prompt, memory=memory) #system_prompt=custom_prompt,
+    return chat_engine
 
 
 @r.post("")
@@ -39,7 +40,6 @@ async def chat(
     data: _ChatData = Depends(json_to_model(_ChatData)),
     index: Any = None
 ):    
-    
     
     # check preconditions and get last message
     if len(data.messages) == 0 or data.bot_id == None:
@@ -64,8 +64,16 @@ async def chat(
             role=get_role(m.role),
             content=(m.content),
         )
-        for m in bot.context
+        for m in data.messages
     ]
+
+    bot.context = messages
+
+    # write messages to ./DATA/bot_id/empty.txt
+    # with open(f'{DATA_DIR}/{bot.bot_id}/empty.txt', 'w') as f:
+    #     f.write("")
+    #     for message in messages:
+    #         f.write(str(message)+'\n')
 
     chat_engine = create_engine(index)
     
