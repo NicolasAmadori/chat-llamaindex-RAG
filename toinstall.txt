@@ -1,1 +1,0 @@
-npm i @fortaine/fetch-event-source @vercel/analytics rehype-highlight rehype-katex remark-breaks mermaid next-themes use-debounce emoji-picker-react

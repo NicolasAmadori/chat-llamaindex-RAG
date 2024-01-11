@@ -107,12 +107,12 @@ def create_HFLLM(bot: _Bot):
 	m_kwargs= {"trust_remote_code": True, "torch_dtype": "auto"}
 	mtp = messages_to_prompt
 
-	if bot.model_name == _availableModels.cerbero_chat:
-		jinja_string = """ {% if message['role'] == 'user' %}[|Umano|] {{ message['content'] }} \n{% else %} [|Assistente|] {{ message['content'] }} \n{% endif %}"""
-		t_kwargs = {"torch_dtype": "auto", "chat_template": jinja_string, "skip_special_tokens": True}
-		m_kwargs = {"do_sample":True,"revision":"float16","torch_dtype": "auto", "quantization_config": quantization_config, "trust_remote_code": True}
-		mtp = messages_to_prompt_ita
-	elif bot.model_name in [_availableModels.llama, _availableModels.llama_13B_4bit]:
+	# if bot.model_name == _availableModels.cerbero_chat:
+	# 	jinja_string = """ {% if message['role'] == 'user' %}[|Umano|] {{ message['content'] }} \n{% else %} [|Assistente|] {{ message['content'] }} \n{% endif %}"""
+	# 	t_kwargs = {"torch_dtype": "auto", "chat_template": jinja_string, "skip_special_tokens": True}
+	# 	m_kwargs = {"do_sample":True,"revision":"float16","torch_dtype": "auto", "quantization_config": quantization_config, "trust_remote_code": True}
+	# 	mtp = messages_to_prompt_ita
+	if bot.model_name in [_availableModels.llama, _availableModels.llama_13B_4bit]:
 		mtp = messages_to_prompt_lama		
 	elif bot.model_name == _availableModels.vicuna_3b_q4:
 		mtp = messages_to_prompt_vicuna	
