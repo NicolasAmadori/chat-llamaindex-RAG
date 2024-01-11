@@ -28,6 +28,7 @@ export default function ChatHeader() {
       </div>
       <div className="text-center py-4">
         <Typography.H4>{bot? bot.name : "Create or select a bot to start"}</Typography.H4>
+        <Typography.P>{bot? "Using "+bot.modelConfig.model : ""}</Typography.P>
         {bot && <div className="text-sm text-muted-foreground">
           {Locale.Chat.SubTitle(numberOfMessages)}
         </div>}

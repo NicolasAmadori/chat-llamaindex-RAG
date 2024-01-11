@@ -22,13 +22,13 @@ logger = logging.getLogger("uvicorn")
 chat_router = r = APIRouter()
 
 def create_engine(index: VectorStoreIndex):
-    memory = ChatMemoryBuffer.from_defaults(token_limit=50000)
+    memory = ChatMemoryBuffer.from_defaults(token_limit=5000)
     
     custom_prompt = """
-        You are a chatbot, able to have normal interactions, as well as talk. You should also keep trace of all the information provided by the user, and use it to answer the questions.
+         You are a chatbot, able to have normal interactions, as well as talk. You should also keep trace of all the information provided by the user, and use it to answer to any question.
     """
 
-    chat_engine = index.as_chat_engine(chat_mode='context', system_prompt=custom_prompt, memory=memory) #system_prompt=custom_prompt,
+    chat_engine = index.as_chat_engine(chat_mode='context', system_prompt=custom_prompt, memory=memory) #, )
     return chat_engine
 
 

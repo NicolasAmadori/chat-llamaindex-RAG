@@ -33,21 +33,29 @@ RUN pip3 install llama-index
 RUN pip3 install --upgrade sentence-transformers==2.2.2
 RUN pip3 install --upgrade accelerate==0.25.0
 RUN pip3 install --upgrade codecarbon==2.1.4
-RUN pip3 install --upgrade streamlit==1.14.0
+# RUN pip3 install --upgrade streamlit==1.14.0
 RUN pip3 install --upgrade wget==3.2
 RUN pip3 install --upgrade scikit-learn==1.1.3
-RUN pip3 install --upgrade nltk==3.7
+RUN pip3 install --upgrade nltk==3.8.1
 RUN pip3 install --upgrade stqdm==0.0.4
 RUN pip3 install --upgrade datasets==2.6.1
-RUN pip3 install --upgrade wandb==0.13.5 
+# RUN pip3 install --upgrade wandb==0.13.5 
 RUN pip3 install pymilvus
 RUN pip3 install milvus
 RUN pip3 install fastapi
 RUN pip3 install uvicorn
-RUN pip3 install pypdf
+# RUN pip3 install pypdf
 RUN pip3 install python-dotenv
 RUN pip3 install einops
+RUN pip3 install auto-gptq
+RUN pip3 install bitsandbytes
+RUN pip3 install optimum
 
 # RUN pip3 install https://download.pytorch.org/whl/cu113/torch-1.12.1%2Bcu113-cp310-cp310-linux_x86_64.whl#sha256=be682ef94e37cd3f0768b8ce6106705410189df2c365d65d7bc1bebb302d84cd
 RUN pip3 install torch
 
+
+# NVCC commands
+# RUN apt install wget
+# RUN wget https://developer.download.nvidia.com/compute/cuda/12.3.2/local_installers/cuda_12.3.2_545.23.08_linux.run
+# RUN sudo sh cuda_12.3.2_545.23.08_linux.run

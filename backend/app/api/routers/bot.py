@@ -69,7 +69,7 @@ async def startup_event():
                 'dataSource': bot['dataSource'],
                 'createdAt' : round(time()*1000)
             }
-            logger.info(f'bot context: {bot["context"][:2]}')
+            # logger.info(f'bot context: {bot["context"][:2]}')
             bot = _Bot(**params)
             bots_list[bot_id] = bot
     

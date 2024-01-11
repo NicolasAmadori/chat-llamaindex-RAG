@@ -43,11 +43,58 @@ config_dict = {
             "quantization": BitsAndBytesConfig(
                 load_in_8bit=False,
             )            
+        },
+    "TheBloke/Llama-2-13B-chat-GPTQ:main":
+        {
+            "prompt": "[INST] {query_str} [/INST]",
+            "quantization": BitsAndBytesConfig(
+                load_in_4bit=False,
+            )        
+        },
+    "TheBloke/Llama-2-13B-chat-GGUF llama-2-13b-chat.Q4_K_M.gguf":
+        {
+            "prompt": "[INST] {query_str} [/INST]",
+            "quantization": BitsAndBytesConfig(
+                load_in_4bit=False,
+            )        
+        },
+    "TheBloke/Wizard-Vicuna-30B-Uncensored-GPTQ:gptq-4bit-32g-actorder_True":
+        {
+            "prompt": "USER: {query_str} ASSISTANT:",
+            "quantization": BitsAndBytesConfig(
+                load_in_4bit=False,
+            )        
+        },
+    "https://huggingface.co/TheBloke/Llama-2-13B-chat-GGML/resolve/main/llama-2-13b-chat.ggmlv3.q4_0.bin":
+        {
+            "prompt": "[INST] {query_str} [/INST]",
+            "quantization": BitsAndBytesConfig(
+                load_in_4bit=False,
+            )        
+        },
+    "TheBloke/Llama-2-13B-chat-GGML":
+        {
+            "prompt": "[INST] {query_str} [/INST]",
+            "quantization": BitsAndBytesConfig(
+                load_in_4bit=False,
+            )        
+        },
+    "default":
+        {
+            "prompt": "[INST] {query_str} [/INST]",
+            "quantization": BitsAndBytesConfig(
+                load_in_4bit=False,
+            )               
         }
 }
 
 def get_wrapper_prompt(model_name):
-    return config_dict[model_name]["prompt"]
-
+    try:
+        return config_dict[model_name]["prompt"]
+    except:
+        return config_dict["default"]["prompt"]
 def get_quantization_config(model_name):
-    return config_dict[model_name]["quantization"]
+    try:
+        return config_dict[model_name]["quantization"]
+    except:
+        return config_dict["default"]["quantization"]

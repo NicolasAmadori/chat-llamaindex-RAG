@@ -9,9 +9,6 @@ import { nanoid } from "nanoid";
 export const MESSAGE_ROLES = [
   "system",
   "user",
-  "assistant",
-  "URL",
-  "memory",
 ] as const;
 export type MessageRole = (typeof MESSAGE_ROLES)[number];
 
