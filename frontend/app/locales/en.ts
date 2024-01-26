@@ -36,10 +36,6 @@ const en = {
         Modal: "Long press or right click to save image",
       },
     },
-    Memory: {
-      Title: "Memory Prompt",
-      Send: "Send Memory",
-    },
     Home: {
       Github: "Github",
       Logout: "Logout",

@@ -30,6 +30,9 @@ async def post_file(request: Request):
         add_bot_to_refresh(bot_id)
         return {"ok": True}
     except Exception as e:
+        with open("error.log", "a") as fh:
+            fh.write(str(e))
+
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Wrong body format, error {e}",

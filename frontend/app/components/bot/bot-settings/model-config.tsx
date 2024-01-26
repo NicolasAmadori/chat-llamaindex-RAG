@@ -133,7 +133,7 @@ export function ModelConfigList(props: {
             }
           />
         </ConfigItem>
-        <ConfigItem title={Locale.Memory.Title} subTitle={Locale.Memory.Send}>
+        {/* <ConfigItem title={Locale.Memory.Title} subTitle={Locale.Memory.Send}>
           <Checkbox
             checked={props.modelConfig.sendMemory}
             onCheckedChange={(checked) =>
@@ -142,7 +142,7 @@ export function ModelConfigList(props: {
               )
             }
           />
-        </ConfigItem>
+        </ConfigItem> */}
         <ConfigItem
           title={Locale.Settings.MaxHistory.Title}
           subTitle={Locale.Settings.MaxHistory.SubTitle}

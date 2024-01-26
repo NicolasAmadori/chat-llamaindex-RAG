@@ -5,6 +5,7 @@ from app.api.routers.bot import get_bot_by_id
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from llama_index import VectorStoreIndex
 from llama_index.llms import MessageRole, ChatMessage
+from llama_index.response.notebook_utils import display_response
 
 from app.utils.interface import _ChatData
 from app.utils.model import add_message_to_store, add_response_to_store, get_role
@@ -12,6 +13,9 @@ from app.utils.model import add_message_to_store, add_response_to_store, get_rol
 from llama_index.memory import ChatMemoryBuffer
 
 from typing import Any
+import re
+
+import os
 
 import logging
 
@@ -21,14 +25,17 @@ logger = logging.getLogger("uvicorn")
 
 chat_router = r = APIRouter()
 
-def create_engine(index: VectorStoreIndex):
+def create_engine(index: VectorStoreIndex, bot_id: str):
     memory = ChatMemoryBuffer.from_defaults(token_limit=5000)
     
-    custom_prompt = """
-         You are a chatbot, able to have normal interactions, as well as talk. You should also keep trace of all the information provided by the user, and use it to answer to any question.
-    """
+    chat_mode = "simple"
 
-    chat_engine = index.as_chat_engine(chat_mode='context', system_prompt=custom_prompt, memory=memory) #, )
+    if len(os.listdir(f'{DATA_DIR}/{bot_id}')) > 1:
+        chat_mode = "context"
+
+    print("chat mode: ", chat_mode)
+
+    chat_engine = index.as_chat_engine(chat_mode=chat_mode, memory=memory, similarity_top_k=3)
     return chat_engine
 
 
@@ -69,17 +76,43 @@ async def chat(
 
     bot.context = messages
 
-    # write messages to ./DATA/bot_id/empty.txt
-    # with open(f'{DATA_DIR}/{bot.bot_id}/empty.txt', 'w') as f:
-    #     f.write("")
-    #     for message in messages:
-    #         f.write(str(message)+'\n')
-
-    chat_engine = create_engine(index)
+    chat_engine = create_engine(index, bot_id=bot.bot_id)
     
     response = chat_engine.chat(lastMessage.content, chat_history=messages)
-    
+
+    res = response.response
+
+    # if context.txt exists
+    try:
+        if os.path.isfile(f'./context.txt') and bot.hideContext == False:
+            with open(f'./context.txt', 'r') as f:
+                context_retrieved = f.read().splitlines()
+
+            # get context used from context.txt
+            with open(f'./context.txt', 'r') as f:
+                context_retrieved = f.read().splitlines()
+            
+
+            res = res+"\n\n\n Context used:\n\n"
+            
+            #print("context retrieved: ", context_retrieved)
+            for c in context_retrieved:
+                res += c+"\n\n"
+
+            regex = '(page_label: \d+ file_path: \S+)'  
+            split_message = re.split(regex, res)
+            split_message = [x for x in split_message if x != '' or x != '\n']
+            
+            to_remove = 'file_path: data\/\w+\/'
+            split_message = [re.sub(to_remove, 'file: ', x) for x in split_message]
+            
+            res = "\n".join(split_message)
+
+            os.remove(f'./context.txt')
+    except:
+        print("Exception retrieving context")
+
     add_message_to_store(data.bot_id, lastMessage)
     add_response_to_store(data.bot_id, response)
 
-    return Response(response.response, media_type="text/plain")
+    return Response(res, media_type="text/plain")

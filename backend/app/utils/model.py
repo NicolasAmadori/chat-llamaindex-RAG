@@ -10,8 +10,6 @@ import json
 from fastapi import HTTPException
 from time import time
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
-# from ctransformers import AutoModelForCausalLM as AutoModelForCausalLMGGUF
-
 from llama_index.llms import LlamaCPP
 
 dotenv.load_dotenv()
@@ -20,7 +18,7 @@ device = "cuda:0" if torch.cuda.is_available() else "cpu"
 print(f"Using device: {device}")
 logger = logging.getLogger("uvicorn")
 
-CHUNK_SIZE = 512
+CHUNK_SIZE = 1024
 BOT_STORE_FILE = "./bot_store.json"
 
 
@@ -53,6 +51,8 @@ def messages_to_prompt_vicuna(messages):
 			prompt += f"USER: {message.content} "
 		elif message.role == 'assistant':
 			prompt += f"ASSISTANT: {message.content} "
+		
+	print(prompt)
 	return prompt
 
 
@@ -74,6 +74,21 @@ def messages_to_prompt(messages):
 	# add final assistant prompt
 	prompt = prompt + "<|assistant|>\n"
 
+	#print(prompt.split("--------------------")[1])
+	if len(prompt.split("--------------------")) > 1:
+		context = prompt.split("--------------------")[1]
+
+		# substitute all the \n with spaces
+		context = context.replace("\n", " ")
+		
+		# split on "page_label:"
+		context_splits = context.split("page_label:")[1:]
+
+		# write context splits on a log file. each on a different line
+		with open("context.txt", "w") as f:
+			for context_split in context_splits:
+				f.write("page_label:" + context_split + "\n\n")
+
 	return prompt
 
 def messages_to_prompt_ita(messages):
@@ -91,12 +106,11 @@ def messages_to_prompt_ita(messages):
 	# 	prompt = "<|Sistema|>\n</s>\n" + prompt
 
 	# prompt = prompt + "[|Assistente|]"
-
+	
+	print(prompt)
 	return prompt
 
-#messages_to_prompt=messages_to_prompt_ita,
-
-
+# messages_to_prompt=messages_to_prompt_ita,
 
 def create_HFLLM(bot: _Bot):
 	config: _LLMConfig = bot.modelConfig
