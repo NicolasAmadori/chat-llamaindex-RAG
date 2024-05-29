@@ -13,11 +13,8 @@ const BotList = dynamic(async () => (await import("./bot/bot-list")).default, {
 });
 
 export function BotSideBar(props: { className?: string }) {
-  const navigate = useNavigate();
-  const { setShowSidebar } = useSidebarContext();
-
   return (
-    <div className="h-full relative group border-r w-full md:w-[500px] border-l">
+    <div className="h-full relative group border-r w-full md:w-[25%] border-l">
       <div className="w-full h-full p-5 flex flex-col gap-5">
         <div className="flex flex-col flex-1">
           <div className="mb-5 flex justify-center gap-5 items-start">
