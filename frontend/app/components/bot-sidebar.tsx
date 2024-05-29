@@ -18,12 +18,12 @@ export function BotSideBar(props: { className?: string }) {
       <div className="w-full h-full p-5 flex flex-col gap-5">
         <div className="flex flex-col flex-1">
           <div className="mb-5 flex justify-center gap-5 items-start">
-            <Typography.H1>Source</Typography.H1>
+            <Typography.H1>{Locale.Home.Source}</Typography.H1>
           </div>
         </div>
         <div className="flex items-center justify-end">
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => window.open(GITHUB_URL, "_blank")}
           >

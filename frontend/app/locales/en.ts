@@ -40,6 +40,7 @@ const en = {
       Github: "Github",
       Logout: "Logout",
       Settings: "Settings",
+      Source: "Source",
     },
     Settings: {
       Title: "Settings",
