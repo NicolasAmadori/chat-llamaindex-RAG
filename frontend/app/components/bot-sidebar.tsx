@@ -7,10 +7,36 @@ import Locale from "../locales";
 import { Button } from "./ui/button";
 import Typography from "./ui/typography";
 import { useSidebarContext } from "@/app/components/home";
+import { ScrollArea } from "./ui/scroll-area";
+import SourceItem from "./source-item";
 
-const BotList = dynamic(async () => (await import("./bot/bot-list")).default, {
-  loading: () => null,
-});
+export type Source = {
+  link: string;
+  text: string;
+  author: string;
+  date: string | null;
+};
+
+const sources: Source[] = [
+  {
+    link: "https://example.com/article1",
+    text: "An interesting article about technology.",
+    author: "John Doe",
+    date: "2023-01-01",
+  },
+  {
+    link: "https://example.com/article2",
+    text: "A comprehensive guide on software development.",
+    author: "Jane Smith",
+    date: "2023-02-15",
+  },
+  {
+    link: "https://example.com/article3",
+    text: "An analysis of modern web design trends.",
+    author: "Alice Johnson",
+    date: null,
+  },
+];
 
 export function BotSideBar(props: { className?: string }) {
   return (
@@ -20,6 +46,11 @@ export function BotSideBar(props: { className?: string }) {
           <div className="mb-5 flex justify-center gap-5 items-start">
             <Typography.H1>{Locale.Home.Source}</Typography.H1>
           </div>
+          <ScrollArea className="h-full pr-0 md:pr-3">
+            {sources.map((s) => (
+              <SourceItem source={s} />
+            ))}
+          </ScrollArea>
         </div>
         <div className="flex items-center justify-end">
           <Button
