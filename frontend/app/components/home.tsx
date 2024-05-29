@@ -113,13 +113,13 @@ function Screen() {
   return (
     <main className="flex overflow-hidden h-screen w-screen box-border">
       <>
-        {<BotSideBar />}
         <div className="flex-1 overflow-hidden">
           <Routes>
             <Route path={Path.Chat} element={<ChatPage />} />
             <Route path={Path.Settings} element={<SettingsPage />} />
           </Routes>
         </div>
+		{<BotSideBar />}
       </>
     </main>
   );
