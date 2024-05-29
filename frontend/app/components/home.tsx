@@ -119,7 +119,7 @@ function Screen() {
             <Route path={Path.Settings} element={<SettingsPage />} />
           </Routes>
         </div>
-		{<BotSideBar />}
+		{showSidebar && <BotSideBar />}
       </>
     </main>
   );

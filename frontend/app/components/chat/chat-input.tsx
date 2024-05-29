@@ -233,7 +233,7 @@ export default function ChatInput(props: ChatInputProps) {
         autoFocus={autoFocus}
       />
       <div className="my-2 flex items-center gap-2.5 absolute right-[15px]">
-        <FileUploader
+        {/* <FileUploader
           config={{
             inputId: "document-uploader",
             allowedExtensions: ALLOWED_DOCUMENT_EXTENSIONS,
@@ -243,7 +243,7 @@ export default function ChatInput(props: ChatInputProps) {
           }}
           onUpload={doSubmitFile}
           onError={showError}
-        />
+        /> */}
         {false ? (
           <Button
             size="icon"

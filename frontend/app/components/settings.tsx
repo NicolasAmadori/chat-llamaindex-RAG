@@ -38,10 +38,11 @@ function SettingHeader() {
         </div>
       </div>
       <Button
-        variant="outline"
+        variant="ghost"
         size="icon"
         onClick={() => {
           navigate(Path.Home);
+          setShowSidebar(true);
         }}
       >
         <X className="w-4 h-4" />

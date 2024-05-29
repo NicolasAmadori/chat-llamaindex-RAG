@@ -64,6 +64,20 @@ export const useBotStore = create<BotStore>()(
       currentBotId: "-1",//Object.values(demoBots)[0].id,
 
       currentBot() {
+        if (get().currentBotId === "-1") {
+          // Create a new empty bot if no bot is present
+          const newBot = createEmptyBot();
+          const id = nanoid();
+          newBot.id = id;
+          set((state) => ({
+            bots: {
+              ...state.bots,
+              [id]: newBot,
+            },
+            currentBotId: id,
+          }));
+          return newBot;
+        }
         return get().bots[get().currentBotId];
       },
       selectBot(id) {
