@@ -87,3 +87,8 @@
 .markdown-body .hljs-strong {
   font-weight: 700;
 }
+
+.highlight {
+  background-color: yellow;
+  color: black;
+}

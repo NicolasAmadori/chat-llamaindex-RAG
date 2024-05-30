@@ -40,7 +40,12 @@ const en = {
       Github: "Github",
       Logout: "Logout",
       Settings: "Settings",
-      Source: "Source",
+      SideBar: {
+        Title: "Sources",
+        Source: "Source",
+        Author: "Author",
+        Date: "Date",
+      },
     },
     Settings: {
       Title: "Settings",
