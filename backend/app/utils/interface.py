@@ -3,6 +3,7 @@ from typing import List
 from enum import Enum
 from llama_index.llms import MessageRole
 from time import time
+import pandas as pd
 
 class _availableModels(Enum):
     # cerbero_chat = "galatolo/cerbero-7b"
@@ -51,3 +52,5 @@ class _Bot(BaseModel):
     botHello: str
     dataSource: str
     createdAt: int
+    df_acts: pd.DataFrame
+    df_speeches: pd.DataFrame

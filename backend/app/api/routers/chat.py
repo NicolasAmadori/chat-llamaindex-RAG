@@ -13,7 +13,7 @@ from app.utils.model import add_message_to_store, add_response_to_store, get_rol
 from llama_index.memory import ChatMemoryBuffer
 
 from typing import Any
-import re
+import re, asyncio
 
 import os
 
@@ -63,7 +63,7 @@ async def chat(
         )
     # convert messages coming from the request to type ChatMessage
     bot = get_bot_by_id(data.bot_id)
-    index = get_index(bot)
+    chat_engine = get_index(bot)
 
     # retrieve history
     messages = [
@@ -75,10 +75,7 @@ async def chat(
     ]
 
     bot.context = messages
-
-    chat_engine = create_engine(index, bot_id=bot.bot_id)
-    
-    response = chat_engine.chat(lastMessage.content, chat_history=messages)
+    response, retrieved_tools = asyncio.run(chat_engine(lastMessage.content, chat_history=messages))
 
     res = response.response
 

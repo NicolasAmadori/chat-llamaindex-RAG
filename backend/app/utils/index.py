@@ -1,4 +1,4 @@
-import logging
+import logging, asyncio
 import os
 from app.utils.model import *
 import gc
@@ -10,6 +10,11 @@ from llama_index import (
     StorageContext,
     VectorStoreIndex,
     load_index_from_storage
+)
+from query_engine_module import (
+    get_tools,
+    get_query_engine,
+    run_query,
 )
 
 from app.utils.model import create_service_context
@@ -50,30 +55,20 @@ def get_index(bot): # TODO - decide if use the name or the index
         current_bot_id = bot.bot_id
         service_context = create_service_context(bot)
 
-    if not os.path.exists(STORAGE_DIR+"/"+bot.bot_id) or bot.bot_id in bots_to_refresh:
-        
-        if bot.bot_id in bots_to_refresh:
-            logger.info(f"Refreshing index for bot {bot.bot_id}")
-            # To remove all the occurences in case the bot is in the list more than once
-            bots_to_refresh[:] = [bot_id for bot_id in bots_to_refresh if bot_id != bot.bot_id]
-        else:
-            logger.info("Creating new index")
+        acts_nodes = get_acts_nodes(bot.df_acts)
+        speeches_nodes = get_speeches_nodes(bot.df_speeches)
 
-        directory = SimpleDirectoryReader(DATA_DIR+"/"+bot.bot_id)
-        documents = directory.load_data()
-        storage_context = StorageContext.from_defaults(vector_store=vector_store)
-        index = VectorStoreIndex.from_documents(documents, storage_context=storage_context, service_context=service_context)
-        logger.info(f"Created index")
-        index.storage_context.persist(STORAGE_DIR+"/"+bot.bot_id)
-        logger.info(f"Finished creating new index. Stored in {STORAGE_DIR+'/'+bot.bot_id}")
-    else:
-        #service_context = service_contexts[bot.bot_id]
-        logger.info(f"Loading index from {STORAGE_DIR+'/'+bot.bot_id}...")
-        storage_context = StorageContext.from_defaults(vector_store=vector_store, persist_dir=STORAGE_DIR+"/"+bot.bot_id)
-        index = load_index_from_storage(storage_context, service_context=service_context)
-        logger.info(f"Finished loading index from {STORAGE_DIR+'/'+bot.bot_id}")
+        all_tools = get_tools(
+            acts_nodes=acts_nodes,
+            speeches_nodes=speeches_nodes,
+            service_context=service_context
+        )
+
+
+        print("\nGetting query engine...\n")
+        query_engine = asyncio.run(get_query_engine(all_tools, service_context))
         
-    return index
+    return query_engine
 
 def add_bot_to_refresh(bot_id: str):
     """

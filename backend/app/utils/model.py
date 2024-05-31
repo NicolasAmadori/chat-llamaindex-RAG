@@ -2,7 +2,7 @@ import logging
 import torch
 from app.utils.interface import _Bot, _LLMConfig, _Message, _availableModels
 from app.utils.config import get_wrapper_prompt, get_quantization_config
-from llama_index import ServiceContext
+from llama_index import ServiceContext, PromptHelper
 import dotenv
 from llama_index.llms import HuggingFaceLLM, MessageRole
 from llama_index.prompts import PromptTemplate
@@ -11,6 +11,18 @@ from fastapi import HTTPException
 from time import time
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 from llama_index.llms import LlamaCPP
+from model_and_nodes_module import (
+    get_acts_nodes,
+    get_speeches_nodes, 
+    get_embed_model,
+    get_llm_model,
+)
+
+from project_config import (
+    MAX_INPUT_SIZE, 
+    MAX_NEW_TOKENS, 
+    MAX_CHUNK_OVERLAP,
+)
 
 dotenv.load_dotenv()
 
@@ -113,79 +125,19 @@ def messages_to_prompt_ita(messages):
 # messages_to_prompt=messages_to_prompt_ita,
 
 def create_HFLLM(bot: _Bot):
-	config: _LLMConfig = bot.modelConfig
-	wrapper_prompt = get_wrapper_prompt(bot.model_name.value)
-	quantization_config = get_quantization_config(bot.model_name.value)
-
-	t_kwargs = {"torch_dtype": "auto"}
-	m_kwargs= {"trust_remote_code": True, "torch_dtype": "auto"}
-	mtp = messages_to_prompt
-
-	# if bot.model_name == _availableModels.cerbero_chat:
-	# 	jinja_string = """ {% if message['role'] == 'user' %}[|Umano|] {{ message['content'] }} \n{% else %} [|Assistente|] {{ message['content'] }} \n{% endif %}"""
-	# 	t_kwargs = {"torch_dtype": "auto", "chat_template": jinja_string, "skip_special_tokens": True}
-	# 	m_kwargs = {"do_sample":True,"revision":"float16","torch_dtype": "auto", "quantization_config": quantization_config, "trust_remote_code": True}
-	# 	mtp = messages_to_prompt_ita
-	if bot.model_name in [_availableModels.llama, _availableModels.llama_13B_4bit]:
-		mtp = messages_to_prompt_lama		
-	elif bot.model_name == _availableModels.vicuna_3b_q4:
-		mtp = messages_to_prompt_vicuna	
-	
-
-	model_params = {
-		"tokenizer_name":bot.tokenizer_name.split(":")[0] if ":" in bot.tokenizer_name else bot.tokenizer_name,
-		"query_wrapper_prompt":PromptTemplate(wrapper_prompt),
-		"context_window":config.maxHistory,
-		"max_new_tokens":config.maxTokens,
-		"tokenizer_kwargs":t_kwargs,
-		"model_kwargs":m_kwargs,
-		"generate_kwargs":{"temperature": config.temperature, "top_k": 50, "top_p": config.topP},
-		"messages_to_prompt":mtp,
-		"device_map":device,
-	}
-
-
-	# Check if is a quantized model
-	if "GPTQ" in bot.model_name.value:
-		model_name, revision = bot.model_name.value.split(":")
-		logger.info(f"Loading quantized model {model_name} revision {revision}")
-		model = AutoModelForCausalLM.from_pretrained(
-			model_name,
-			device_map="auto",
-			revision=revision,
-			**m_kwargs
-		)
-		model_params["model"] = model
-		model_params["device_map"] = "auto"
-	else:
-		model_params["model_name"] = bot.model_name.value
-
-	llm = None
-	
-	if "GGUF" in bot.model_name.value.upper() or "GGML" in bot.model_name.value.upper():
-		llm = LlamaCPP(
-			model_url = bot.model_name.value,
-			temperature = config.temperature,
-			max_new_tokens = config.maxTokens,
-			context_window = config.maxHistory,
-			generate_kwargs = {"temperature": config.temperature, "top_k": 50, "top_p": config.topP},
-			model_kwargs={"n_gpu_layers": -1, "device_map": device, "n_threads": 20},
-			messages_to_prompt = mtp,
-			verbose = True
-		)
-	else:
-		llm = HuggingFaceLLM(**model_params)
+	llm, _ = get_llm_model()
 	return llm
 
 
 def create_service_context(bot: _Bot):
     llm = create_HFLLM(bot)
-    service_context = ServiceContext.from_defaults(
-		chunk_size=CHUNK_SIZE,
-        embed_model="local:BAAI/bge-base-en-v1.5",
-        llm=llm
-    )
-
+    embeddings = get_embed_model()
+	prompt_helper = PromptHelper(MAX_INPUT_SIZE, MAX_NEW_TOKENS, MAX_CHUNK_OVERLAP)
+	service_context = ServiceContext.from_defaults(
+		llm=llm,
+		embed_model=embeddings,
+		prompt_helper=prompt_helper,
+	)
     return service_context
 
 def store_bot(bot_original: _Bot):

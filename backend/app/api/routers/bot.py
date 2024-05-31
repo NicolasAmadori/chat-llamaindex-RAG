@@ -10,6 +10,11 @@ from fastapi import APIRouter, HTTPException, Request, status
 from app.utils.interface import _Bot, _availableModels, _LLMConfig
 from app.utils.model import store_bot, remove_bot_from_store
 
+from file_readers_module import (
+    read_and_format_speeches,
+    read_and_format_acts, 
+)
+
 import logging
 logger = logging.getLogger('uvicorn')
 
@@ -144,7 +149,9 @@ async def create_bot(request: Request):
         'modelConfig': model_config,
         'botHello': bot['bot_hello'],
         'dataSource': bot['data_source'],
-        'createdAt' : round(time()*1000)
+        'createdAt' : round(time()*1000),
+        'df_speeches' : read_and_format_speeches(),
+        'df_acts' : read_and_format_acts(),
     }
     
     bot = _Bot(**params)
