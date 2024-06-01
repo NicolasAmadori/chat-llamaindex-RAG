@@ -34,7 +34,7 @@ function SourceItemUI() {
 
   return (
     <div
-      className="flex flex-col justify-start items-start cursor-pointer mb-2 last:mb-0 rounded-md border-2 border-muted bg-popover hover:bg-accent relative p-4 overflow-scroll"
+      className="flex flex-col justify-start items-start cursor-pointer mb-2 last:mb-0 rounded-md border-2 border-muted bg-popover hover:bg-accent relative p-4 overflow-hidden"
     >
       <div className="w-full mb-2">
         <a href={source.link} target="_blank" rel="noopener noreferrer" className="card-link">
@@ -49,13 +49,13 @@ function SourceItemUI() {
       </div>
       <div 
         ref={ref}
-        className="flex flex-col w-full max-h-60 overflow-y-auto">
+        className="flex flex-col w-full max-h-60 overflow-y-auto rounded-md">
         <div className="font-medium">
           {highlightText(source.text, source.startHighlight, source.endHighlight)}
         </div>
       </div>
       {source.date != null && (
-          <div>
+          <div className="rounded-md text-muted-foreground mt-2">
             <strong>{Locale.Home.SideBar.Date}: </strong> {new Date(source.date).toLocaleDateString()}
           </div>
         )}

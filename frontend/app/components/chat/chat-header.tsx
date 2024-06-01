@@ -21,13 +21,15 @@ export default function ChatHeader() {
   return (
     <div className="relative">
       <div className="absolute top-4 left-5">
-        <ThemeToggle />
+        <Typography.H2>CLVZ LlamaIndex</Typography.H2>
       </div>
       <div className="text-center py-4">
-        <Typography.H1>CLVZ LlamaIndex</Typography.H1>
         {bot && <div className="text-sm text-muted-foreground">
           {Locale.Chat.SubTitle(numberOfMessages)}
         </div>}
+      </div>
+      <div className="absolute top-4 right-16">
+        <ThemeToggle />
       </div>
       <div className="absolute top-4 right-5">
         <Button
@@ -41,7 +43,7 @@ export default function ChatHeader() {
             <Settings className="h-4 w-4" />
           </Button>
       </div>
-      <Separator />
     </div>
   );
 }
+

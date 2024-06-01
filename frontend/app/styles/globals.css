@@ -8,7 +8,7 @@
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
     --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
+    --popover: #F9F9F9;
     --popover-foreground: 240 10% 3.9%;
     --primary: 142.1 76.2% 36.3%;
     --primary-foreground: 355.7 100% 97.3%;
@@ -24,6 +24,13 @@
     --input: 240 95.9% 90%;
     --ring: 142.1 76.2% 36.3%;
     --radius: 0.5rem;
+	
+	--side-background: #F9F9F9;
+	--user-messagge-background: #F4F4F4;
+	--user-messagge-foreground: #0D0D0D;
+	--send-button-background: #d7d7d7;
+	--send-button-foreground: #0D0D0D;
+	
 
     /* markdown variables */
     --color-prettylights-syntax-comment: #6e7781;
@@ -71,11 +78,11 @@
   }
 
   .dark {
-    --background: 20 14.3% 4.1%;
+    --background: 0 0% 12.94%;
     --foreground: 0 0% 95%;
     --card: 24 9.8% 10%;
     --card-foreground: 0 0% 95%;
-    --popover: 0 0% 9%;
+    --popover: #171717;
     --popover-foreground: 0 0% 95%;
     --primary: 142.1 70.6% 45.3%;
     --primary-foreground: 144.9 80.4% 10%;
@@ -90,6 +97,12 @@
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
     --ring: 142.4 71.8% 29.2%;
+	
+	--side-background: #171717;
+	--user-messagge-background: #2F2F2F;
+	--user-messagge-foreground: #ECECEC;
+	--send-button-background: #676767;
+	--send-button-foreground: #2f2f2f;
 
     /* markdown variables */
     --color-prettylights-syntax-comment: #8b949e;

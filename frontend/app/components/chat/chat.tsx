@@ -26,6 +26,8 @@ import ChatInput from "./chat-input";
 import { ClearContextDivider } from "./clear-context-divider";
 import { isImageFileType } from "@/app/client/fetch/file";
 
+import "../../styles/lib/custom-theme.css";
+
 const Markdown = dynamic(
   async () => (await import("../ui/markdown")).Markdown,
   {
@@ -261,12 +263,12 @@ export function Chat() {
                         )}
                         <div
                           className={cn(
-                            "box-border max-w-full text-sm select-text relative break-words rounded-lg px-3 py-2",
+                            "box-border max-w-full text-sm select-text relative break-words rounded-xl px-3 py-2 chat-message",
                             isUser
-                              ? "ml-auto bg-primary text-primary-foreground"
+                              ? "ml-auto user-message"
                               : isMemory
-                              ? "italic text-secondary-foreground"
-                              : "bg-muted",
+                              ? "italic"
+                              : "",
                           )}
                         >
                           {message.urlDetail?.type &&
@@ -338,7 +340,6 @@ export function Chat() {
           })}
         </div>
       </ScrollArea>
-      <Separator />
       <div className="relative w-full box-border flex-col pt-2.5 p-5 space-y-2">
         <div className="flex justify-between items-center">
           {/* <ChatAction

@@ -1,0 +1,16 @@
+.side-bar{
+  background-color: var(--side-background);
+}
+
+.user-message{
+  background-color: var(--user-messagge-background);
+}
+
+.chat-message{
+	color: var(--user-messagge-foreground);
+}
+
+.send-button{
+	background-color: var(--send-button-background);
+	color: var(--send-button-foreground);
+}

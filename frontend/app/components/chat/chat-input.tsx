@@ -26,6 +26,7 @@ import { autoGrowTextArea } from "../../utils/autogrow";
 import FileUploader from "../ui/file-uploader";
 import ImagePreview from "../ui/image-preview";
 import { isVisionModel } from "../../client/platforms/llm";
+import "../../styles/lib/custom-theme.css";
 
 export interface ChatInputProps {
   inputRef: React.RefObject<HTMLTextAreaElement>;
@@ -202,68 +203,49 @@ export default function ChatInput(props: ChatInputProps) {
 
   return (
     <div>
-    { botStore.currentBotId !== "-1" &&
-    <div className="flex flex-1 items-end relative">
-      {previewImage && (
-        <div className="absolute top-[12px] left-[12px] w-[50px] h-[50px] rounded-xl cursor-pointer">
-          <ImagePreview
-            url={previewImage}
-            uploading={isUploadingImage}
-            onRemove={removeImage}
+      {botStore.currentBotId !== "-1" && (
+        <div className="flex flex-1 items-end relative">
+          {previewImage && (
+            <div className="absolute top-3 left-3 w-12 h-12 rounded-xl cursor-pointer">
+              <ImagePreview
+                url={previewImage}
+                uploading={isUploadingImage}
+                onRemove={removeImage}
+              />
+            </div>
+          )}
+          <Textarea
+            className={cn(
+              "ring-inset focus-visible:ring-offset-0 pr-28 md:pr-40 min-h-[56px] shadow user-message border-none",
+              {
+                "pt-20": previewImage,
+              }
+            )}
+            ref={inputRef}
+            placeholder={Locale.Chat.Input}
+            onInput={(e) => onInput(e.currentTarget.value)}
+            value={userInput}
+            onKeyDown={onInputKeyDown}
+            onFocus={scrollToBottom}
+            onClick={scrollToBottom}
+            rows={inputRows}
+            autoFocus={autoFocus}
           />
+          <div className="my-2 flex items-center gap-2.5 absolute right-3.5 ">
+            <Button
+              className="send-button"
+              onClick={() => {
+                doSubmit(userInput);
+                setUserInput("");
+              }}
+              disabled={botStore.currentBotId == "-1" || isRunning || isUploadingImage}
+            >
+              <Send className="h-4 w-4 mr-2" />
+              {Locale.Chat.Send}
+            </Button>
+          </div>
         </div>
       )}
-      <Textarea
-        className={cn(
-          "ring-inset focus-visible:ring-offset-0 pr-28 md:pr-40 min-h-[56px]",
-          {
-            "pt-20": previewImage,
-          },
-        )}
-        ref={inputRef}
-        placeholder={
-          false ? Locale.Chat.InputMobile : Locale.Chat.Input
-        }
-        onInput={(e) => onInput(e.currentTarget.value)}
-        value={userInput}
-        onKeyDown={onInputKeyDown}
-        onFocus={scrollToBottom}
-        onClick={scrollToBottom}
-        rows={inputRows}
-        autoFocus={autoFocus}
-      />
-      <div className="my-2 flex items-center gap-2.5 absolute right-[15px]">
-        {/* <FileUploader
-          config={{
-            inputId: "document-uploader",
-            allowedExtensions: ALLOWED_DOCUMENT_EXTENSIONS,
-            checkExtension,
-            fileSizeLimit: DOCUMENT_FILE_SIZE_LIMIT,
-            disabled: (botStore.currentBotId == "-1") && (isRunning || isUploadingImage),
-          }}
-          onUpload={doSubmitFile}
-          onError={showError}
-        /> */}
-        {false ? (
-          <Button
-            size="icon"
-            onClick={() =>  doSubmit(userInput)}
-            disabled={(botStore.currentBotId == "-1") && (isRunning || isUploadingImage)}
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-        ) : (
-          <Button
-            onClick={() => doSubmit(userInput)}
-            disabled={(botStore.currentBotId == "-1") && (isRunning || isUploadingImage)}
-          >
-            <Send className="h-4 w-4 mr-2" />
-            {Locale.Chat.Send}
-          </Button>
-        )}
-      </div>
-    </div>
-    }
     </div>
   );
 }
